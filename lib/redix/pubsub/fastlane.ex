@@ -25,11 +25,11 @@ defmodule Redix.PubSub.Fastlane do
   ## Usage
 
   Simply add it to your Supervisor stack:
-      supervisor(Redix.PubSub.Fastlane.Supervisor, [MyApp.PubSub.Redis, [host: "localhost",
+      supervisor(Redix.PubSub.Fastlane, [MyApp.PubSub.Redis, [host: "localhost",
                                                                          port: 6397,
                                                                          pool_size: 5]]),
   Or run it by hands:
-      {:ok, _} = Redix.PubSub.Fastlane.Supervisor.start_link(MyApp.PubSub.Redis)
+      {:ok, _} = Redix.PubSub.Fastlane.start_link(MyApp.PubSub.Redis)
 
   Subscription process:
       defmodule Some.Fastlane.Namespace do
@@ -39,7 +39,7 @@ defmodule Redix.PubSub.Fastlane do
         end
       end
 
-      {:ok, _pubsub} = Redix.PubSub.Fastlane.Supervisor.start_link(MyApp.PubSub.Redis)
+      {:ok, _pubsub} = Redix.PubSub.Fastlane.start_link(MyApp.PubSub.Redis)
       Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "my_channel", {Some.Fastlane.Namespace, [:some_id]})
       #=> :ok
   After a subscription, messages published to a channel are delivered `Some.Fastlane.Namespace.fastlane/2`,
@@ -72,10 +72,28 @@ defmodule Redix.PubSub.Fastlane do
   """
 
   @doc """
-  Subscribes the caller to the PubSub adapter's channel.
+  Creates new PubSub Supervisor process
+    * `name` - Server name, like MyApp.PubSub.Redis
+    * `options` - The Server options, default: `[]`
+  ## Examples
+      iex> {:ok, _} = Redix.PubSub.Fastlane.start_link(MyApp.PubSub.Redis)
+      :ok
+  """
+  @spec start_link(atom, Keyword.t) :: :ok | {:error, term}
+  def start_link(name, options \\ [])
+    when is_atom(name) do
+    {:ok, _} = Application.ensure_all_started(:redix_pubsub_fastlane)
+    Supervisor.start_link(name, options)
+  end
+
+  @doc """
+  Subscribes fastlane to the PubSub adapter by channel.
     * `server` - The Pid registered name of the server
     * `channel` - The channel to subscribe to, ie: `"users:123"`
     * `fastlane` - The tuple with fastlane module and it's arguments, ie: `{My.Fastlane, [:some_id]}`
+  ## Examples
+      iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {My.Fastlane, [:some_id]})
+      :ok
   """
   @spec subscribe(atom, binary, term) :: :ok | {:error, term}
   def subscribe(server, channel, fastlane)
@@ -84,23 +102,64 @@ defmodule Redix.PubSub.Fastlane do
   end
 
   @doc """
-  Subscribes the caller to the PubSub adapter's channel.
+  Unsubscribes fastlane from the PubSub adapter by channel.
     * `server` - The Pid registered name of the server
-    * `channel` - The channel to subscribe to, ie: `"users:123"`
-    * `pid` - The pid of the caller.
+    * `channel` - The channel to unsubscribe from, ie: `"users:123"`
+  ## Examples
+      iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {My.Fastlane, [:some_id]})
+      :ok
+      iex> Redix.PubSub.Fastlane.unsubscribe(MyApp.PubSub.Redis, "users:123")
+      :ok
   """
-  @spec subscribe(atom, binary, pid) :: :ok | {:error, term}
-  def subscribe(server, channel, pid)
+  @spec unsubscribe(atom, binary) :: :ok | {:error, term}
+  def unsubscribe(server, channel)
     when is_atom(server) and is_binary(channel),
-      do: Server.subscribe(server, channel, pid)
+      do: Server.unsubscribe(server, channel)
+
+  @doc """
+  Subscribes fastlane to the PubSub adapter by pattern.
+    * `server` - The Pid registered name of the server
+    * `pattern` - The pattern to subscribe to, ie: `"ba*"`
+    * `fastlane` - The tuple with fastlane module and it's arguments, ie: `{My.Fastlane, [:some_id]}`
+  ## Examples
+      iex> Redix.PubSub.Fastlane.psubscribe(MyApp.PubSub.Redis, "ba*", {My.Fastlane, [:some_id]})
+      :ok
+  """
+  @spec psubscribe(atom, String.t, term) :: :ok | {:error, term}
+  def psubscribe(server, pattern, fastlane)
+    when is_atom(server) and is_tuple(fastlane) do
+    Server.psubscribe(server, pattern, fastlane)
+  end
+
+  @doc """
+  Unsubscribes fastlane from the PubSub adapter's by pattern.
+    * `server` - The Pid registered name of the server
+    * `pattern` - The pattern to unsubscribe from, ie: `"ba*"`
+  ## Examples
+      iex> Redix.PubSub.Fastlane.psubscribe(MyApp.PubSub.Redis, "ba*", {My.Fastlane, [:some_id]})
+      :ok
+      iex> Redix.PubSub.Fastlane.punsubscribe(MyApp.PubSub.Redis, "ba*")
+      :ok
+  """
+  @spec punsubscribe(atom, String.t) :: :ok | {:error, term}
+  def punsubscribe(server, pattern) when is_atom(server),
+      do: Server.punsubscribe(server, pattern)
 
   @doc """
   Publish message on given channel.
+  Helper method, mostly for testing.
     * `server` - The Pid or registered server name, for example: `MyApp.PubSub`
     * `channel` - The channel to publish to, ie: `"users:123"`
     * `message` - The payload of the publish
+  ## Examples
+      iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {My.Fastlane, [:some_id]})
+      :ok
+      iex> Redix.PubSub.Fastlane.publish(MyApp.PubSub.Redis, "users:123", "hello")
+      :ok
+      "hello"
+      [:some_id]
   """
-  @spec publish(atom, binary, term) :: :ok | {:error, term}
+  @spec publish(atom, binary, term | binary) :: :ok | {:error, term}
   def publish(server, channel, message) when is_atom(server),
     do: Server.publish(server, channel, message)
 
@@ -109,11 +168,10 @@ defmodule Redix.PubSub.Fastlane do
   This function is asynchronous (*fire and forget*): it returns `:ok` as soon as
   it's called and performs the closing of the connection after that.
   ## Examples
-      iex> {:ok, _} = Redix.PubSub.Fastlane.Supervisor.start_link(MyApp.PubSub.Redis)
       iex> Redix.PubSub.Fastlane.stop(MyApp.PubSub.Redis)
       :ok
   """
-  @spec stop(atom) :: :ok
+  @spec stop(atom) :: :ok | :error
   def stop(server) do
     Supervisor.stop(server)
   end

@@ -1,4 +1,4 @@
-# Redix.Pubsub.Fastlane
+# Redix.PubSub.Fastlane
 
 > Fastlane pattern based on Redix.PubSub interface for Elixir
 
@@ -13,7 +13,10 @@ Main goal is providing a fastlane path for published events.
 Imagine: You have a `Main` task, that depends on few subtasks, each with its own UUID & in they await for published event, but also must know  the `Main` task ID within every event.
 
 Ie:
-    Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {My.Fastlane, ["some_id"]})
+
+```elixir
+Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {My.Fastlane, ["some_id"]})
+```
 
 ## Installation
 
@@ -21,43 +24,60 @@ Ie:
 
 1. Add `redix_pubsub_fastlane` to your list of dependencies in `mix.exs`:
 
-        def deps do
-          [{:redix_pubsub_fastlane, "~> 0.1.0"}]
-        end
+  ```elixir
+  def deps do
+    [{:redix_pubsub_fastlane, "~> 0.1.0"}]
+  end
+  ```
 
 2. Ensure `redix_pubsub_fastlane` is started before your application:
 
-        def application do
-          [applications: [:redix_pubsub_fastlane]]
-        end
+  ```elixir
+  def application do
+    [applications: [:redix_pubsub_fastlane]]
+  end
+```
 
 3. Also you can simply add it to your Mix.config:
 
-        config :redix_pubsub_fastlane,
-          fastlane: Some.DefaultFastlane,
-          host: "192.168.1.100"
+  ```elixir
+  config :redix_pubsub_fastlane,
+    fastlane: Some.DefaultFastlane,
+    host: "192.168.1.100"
+
+  ```
 
 ## Usage
 
 Simply add it to your Supervisor stack:
 
-    supervisor(Redix.PubSub.Fastlane.Supervisor, [MyApp.PubSub.Redis, [host: "localhost",
-                                                                       port: 6397,
-                                                                       pool_size: 5]])
+```elixir
+supervisor(Redix.PubSub.Fastlane, [MyApp.PubSub.Redis, [host: "localhost",
+                                                               port: 6397,
+                                                               pool_size: 5]])
+```
 
 Or run it by hands:
 
-    {:ok, pubsub_server} = Redix.PubSub.Fastlane.Supervisor.start_link(MyApp.PubSub.Redis)
+```elixir
+{:ok, pubsub_server} = Redix.PubSub.Fastlane.start_link(MyApp.PubSub.Redis)
+```
 
 ### Config Options
 
 Option       | Description                                                            | Default        |
+:----------- | :--------------------------------------------------------------------- | :------------- |
 `:name`      | The required name to register the PubSub processes, ie: `MyApp.PubSub` |                |
 `:fastlane`  | The name of default fastlane module, ie: `MyApp.Fastlane`              | `nil`          |
 `:database`  | The redis-server database                                              | `""`           |
 `:host`      | The redis-server host IP                                               | `"127.0.0.1"`  |
 `:port`      | The redis-server port                                                  | `6379`         |
 `:password`  | The redis-server password                                              | `""`           |
+
+
+Inspired by:
+
+- [phoenix_pubsub_redis](https://github.com/phoenixframework/phoenix_pubsub_redis)
 
 ## License
 

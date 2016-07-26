@@ -21,6 +21,7 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
   """
 
   @pool_size 5
+  @timeout 5_000
   @defaults [host: "127.0.0.1", port: 6379]
   @config_key :redix_pubsub_fastlane
 
@@ -30,7 +31,16 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
   end
 
   @doc false
-  def stop(name), do: Supervisor.stop(supervisor_module(name))
+  def stop(name) do
+    pid =
+      supervisor_module(name)
+      |> Process.whereis
+
+    ref = Process.monitor(pid)
+
+    pid
+    |> stop_process(ref)
+  end
 
   @doc false
   def init([server_name, opts]) do
@@ -59,6 +69,17 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
   end
 
   defp supervisor_module(name), do: Module.concat(name, Supervisor)
+
+  defp stop_process(pid, ref) when is_pid(pid) do
+    Process.exit(pid, :normal)
+    receive do
+      {:DOWN, ^ref, _, _, _} -> :ok
+    after
+      @timeout -> exit(:timeout)
+    end
+    :ok
+  end
+  defp stop_process(_, _), do: :error
 
   defp config do
     Application.get_all_env(@config_key)

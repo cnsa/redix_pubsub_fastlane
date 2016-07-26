@@ -5,6 +5,7 @@ defmodule Redix.PubSub.Fastlane.Server do
   require Logger
 
   @redix_opts [:host, :port, :password, :database]
+  @skip_callbacks [:subscribed, :unsubscribed, :psubscribed, :punsubscribed]
 
   defmodule Subscription do
     @moduledoc false
@@ -47,13 +48,19 @@ defmodule Redix.PubSub.Fastlane.Server do
   def find(pubsub_server, channel), do: GenServer.call(pubsub_server, {:find, channel})
 
   @doc false
-  def subscribe(pubsub_server, channel, fastlane), do: GenServer.call(pubsub_server, {:subscribe, channel, fastlane})
+  def subscribe(pubsub_server, channel, fastlane), do: GenServer.call(pubsub_server, {:subscribe, channel, fastlane, :subscribe})
+
+  @doc false
+  def psubscribe(pubsub_server, pattern, fastlane), do: GenServer.call(pubsub_server, {:subscribe, pattern, fastlane, :psubscribe})
+
+  @doc false
+  def unsubscribe(pubsub_server, channel), do: GenServer.call(pubsub_server, {:unsubscribe, channel, :unsubscribe})
+
+  @doc false
+  def punsubscribe(pubsub_server, pattern), do: GenServer.call(pubsub_server, {:unsubscribe, pattern, :punsubscribe})
 
   @doc false
   def publish(pubsub_server, channel, message), do: GenServer.call(pubsub_server, {:publish, channel, message})
-
-  @doc false
-  def drop(pubsub_server, channel), do: GenServer.cast(pubsub_server, {:drop, channel})
 
   def handle_call({:publish, channel, message}, _from, state) do
     {:reply, _publish(channel, message, state.pool_name), state}
@@ -69,23 +76,18 @@ defmodule Redix.PubSub.Fastlane.Server do
     {:reply, result, state}
   end
 
-  def handle_call({:subscribe, channel, fastlane}, _from, %{channels: _, redix_pid: _} = state) do
-    subscription = _subscribe(channel, fastlane, state)
+  def handle_call({:subscribe, channel, fastlane, method}, _from, %{channels: _, redix_pid: _} = state) do
+    subscription = _subscribe(channel, fastlane, state, method)
     {:reply, subscription, state}
   end
 
-  def handle_cast(:stop, _state) do
-    {:stop, :normal}
+  def handle_call({:unsubscribe, channel, method}, _from, %{channels: _, redix_pid: _} = state) do
+    result = _unsubscribe(channel, state, method)
+    {:reply, result, state}
   end
 
-  def handle_cast({:drop, channel}, %{channels: channels} = state) do
-    true = :ets.delete(channels, channel)
-
-    {:noreply, state}
-  end
-
-  def handle_info({:redix_pubsub, redix_pid, :subscribed, _}, %{redix_pid: redix_pid} = state) do
-    {:noreply, state}
+  def handle_cast(:stop, state) do
+    {:stop, :normal, state}
   end
 
   def handle_info({:redix_pubsub, redix_pid, :message, %{payload: payload, channel: channel}}, %{channels: channels, redix_pid: redix_pid} = state) do
@@ -93,10 +95,13 @@ defmodule Redix.PubSub.Fastlane.Server do
       {:ok, %{subscription: subscription}} ->
         module = subscription.parent || state.fastlane
         module.fastlane(payload, subscription.options)
-        drop(state.server_name, channel)
       _ -> nil
     end
 
+    {:noreply, state}
+  end
+
+  def handle_info({:redix_pubsub, redix_pid, operation, _}, %{redix_pid: redix_pid} = state) when operation in @skip_callbacks do
     {:noreply, state}
   end
 
@@ -131,24 +136,32 @@ defmodule Redix.PubSub.Fastlane.Server do
     end
   end
 
-  defp _subscribe(channel, {parent, options}, state) do
+  defp _subscribe(channel, {parent, options}, state, method) when is_atom(parent) and is_list(options)  do
     subscription = %Subscription{parent: parent, options: options, channel: channel}
-    subscribe_to_channel(state, channel, subscription)
-    :ok
-  end
-  defp _subscribe(channel, pid, state) do
-    subscribe_to_channel(state, channel, pid)
-    :ok
-  end
 
-  defp subscribe_to_channel(%{connected: true, redix_pid: redix_pid, channels: channels}, channel, %Subscription{} = subscription) do
+    case subscribe_to_channel(state, channel, subscription, method) do
+      :error -> :error
+      _ -> :ok
+    end
+  end
+  defp _subscribe(_, _, _, _), do: :error
+
+  defp _unsubscribe(channel, %{connected: true, redix_pid: redix_pid, channels: channels}, method) do
+    true = :ets.delete(channels, channel)
+    IO.inspect channel
+    IO.inspect method
+    apply(Redix.PubSub, method, [redix_pid, channel, self()])
+    :ok
+  end
+  defp _unsubscribe(_, _, _), do: :error
+
+  defp subscribe_to_channel(%{connected: true, redix_pid: redix_pid, channels: channels}, channel, %Subscription{} = subscription, method) do
     true = :ets.insert(channels, {channel, subscription})
-    :ok  = Redix.PubSub.subscribe(redix_pid, channel, self())
+    IO.inspect channel
+    IO.inspect method
+    apply(Redix.PubSub, method, [redix_pid, channel, self()])
   end
-  defp subscribe_to_channel(%{connected: true, redix_pid: redix_pid}, channel, pid) do
-    :ok  = Redix.PubSub.subscribe(redix_pid, channel, pid)
-  end
-  defp subscribe_to_channel(_, _, _), do: :error
+  defp subscribe_to_channel(_, _, _, _), do: :error
 
   defp establish_conn(state) do
     redis_opts = Keyword.take(state.opts, @redix_opts)
