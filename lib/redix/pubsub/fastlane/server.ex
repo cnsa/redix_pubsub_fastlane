@@ -24,7 +24,7 @@ defmodule Redix.PubSub.Fastlane.Server do
   """
   def init(opts) do
     Process.flag(:trap_exit, true)
-    channels = :ets.new(opts[:server_name], [:set, :named_table, {:read_concurrency, true}])
+    channels = :ets.new(opts[:server_name], [:set, :named_table, {:read_concurrency, true}, {:write_concurrency, true}])
 
     state = %{server_name: Keyword.fetch!(opts, :server_name),
               channels: channels,
@@ -80,13 +80,19 @@ defmodule Redix.PubSub.Fastlane.Server do
     {:reply, result, state}
   end
 
-  def handle_call({:subscribe, channel, fastlane, method}, _from, %{channels: _, redix_pid: _} = state) do
-    subscription = _subscribe(channel, fastlane, state, method)
+  def handle_call({:subscribe, channel, fastlane, method}, _from, %{channels: channels, redix_pid: _} = state) do
+    subscription = case _find(channels, channel) do
+      {:ok, _} -> :ok
+      :error   -> _subscribe(channel, fastlane, state, method)
+    end
     {:reply, subscription, state}
   end
 
-  def handle_call({:unsubscribe, channel, method}, _from, %{channels: _, redix_pid: _} = state) do
-    result = _unsubscribe(channel, state, method)
+  def handle_call({:unsubscribe, channel, method}, _from, %{channels: channels, redix_pid: _} = state) do
+    result = case _find(channels, channel) do
+      {:ok, _} -> _unsubscribe(channel, state, method)
+      :error   -> :ok
+    end
     {:reply, result, state}
   end
 
