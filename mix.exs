@@ -2,7 +2,7 @@ defmodule RedixPubsubFastlane.Mixfile do
   use Mix.Project
 
   @project_url "https://github.com/merqlove/redix_pubsub_fastlane"
-  @version "0.1.0"
+  @version "0.1.1"
 
   def project do
     [app: :redix_pubsub_fastlane,
@@ -12,6 +12,7 @@ defmodule RedixPubsubFastlane.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps,
+     aliases: [publish: ["hex.publish", "hex.docs", &git_tag/1], tag: [&git_tag/1]],
      source_url: @project_url,
      homepage_url: @project_url,
      description: "Fastlane pattern based on Redix.PubSub interface for Elixir",
@@ -61,6 +62,10 @@ defmodule RedixPubsubFastlane.Mixfile do
         "GitHub" => @project_url
       }
     ]
+  end
+
+  defp git_tag(_args) do
+    System.cmd "git", ["tag", "v" <> Mix.Project.config[:version]]
   end
 
   defp docs do
