@@ -2,6 +2,10 @@
 
 > Fastlane pattern based on Redix.PubSub interface for Elixir
 
+[![Build Status](https://travis-ci.org/merqlove/redix_pubsub_fastlane.svg?branch=master)](https://travis-ci.org/merqlove/redix_pubsub_fastlane)
+[![Coverage Status](https://coveralls.io/repos/github/merqlove/redix_pubsub_fastlane/badge.svg?branch=master)](https://coveralls.io/github/merqlove/redix_pubsub_fastlane?branch=master)
+[![Deps Status](https://beta.hexfaktor.org/badge/all/github/merqlove/redix_pubsub_fastlane.svg)](https://beta.hexfaktor.org/github/merqlove/redix_pubsub_fastlane)
+
 See the [docs](https://hexdocs.pm/redix_pubsub_fastlane/) for more information.
 
 ## About
