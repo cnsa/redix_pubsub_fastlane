@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Redix.PubSub.Fastlane by merqlove</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Redix.PubSub.Fastlane</h1>
+      <h2 class="project-tagline">Fastlane pattern based on Redix.PubSub interface for Elixir</h2>
+      <a href="https://github.com/merqlove/redix_pubsub_fastlane" class="btn">View on GitHub</a>
+      <a href="https://github.com/merqlove/redix_pubsub_fastlane/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/merqlove/redix_pubsub_fastlane/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p><a href="https://travis-ci.org/merqlove/redix_pubsub_fastlane"><img src="https://travis-ci.org/merqlove/redix_pubsub_fastlane.svg?branch=master" alt="Build Status"></a>
+<a href="https://coveralls.io/github/merqlove/redix_pubsub_fastlane?branch=master"><img src="https://coveralls.io/repos/github/merqlove/redix_pubsub_fastlane/badge.svg?branch=master" alt="Coverage Status"></a>
+<a href="https://hex.pm/packages/redix_pubsub_fastlane"><img src="https://img.shields.io/hexpm/v/plug.svg?maxAge=2592000" alt="Hex.pm"></a>
+<a href="https://beta.hexfaktor.org/github/merqlove/redix_pubsub_fastlane"><img src="https://beta.hexfaktor.org/badge/prod/github/merqlove/redix_pubsub_fastlane.svg" alt="Deps Status"></a></p>
+
+<p>See the <a href="https://hexdocs.pm/redix_pubsub_fastlane/">docs</a> for more information.</p>
+
+<h2>
+<a id="about" class="anchor" href="#about" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>About</h2>
+
+<p>Works as a simple wrapper over <a href="https://hexdocs.pm/redix_pubsub/">Redix.PubSub</a>.</p>
+
+<p>Main goal is providing a fastlane path for published events.</p>
+
+<p>Imagine: You have a <code>Main</code> task, that depends on few subtasks, each with its own UUID &amp; in they await for published event, but also must know  the <code>Main</code> task ID within every event.</p>
+
+<p>Ie:</p>
+
+<div class="highlight highlight-source-elixir"><pre><span class="pl-c1">Redix</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Fastlane</span>.subscribe(<span class="pl-c1">MyApp</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Redis</span>, <span class="pl-s"><span class="pl-pds">"</span>channel1<span class="pl-pds">"</span></span>, {<span class="pl-c1">My</span>.<span class="pl-c1">Fastlane</span>, [<span class="pl-s"><span class="pl-pds">"</span>some_id<span class="pl-pds">"</span></span>]})</pre></div>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<p><code>redix_pubsub_fastlane</code> can be installed as:</p>
+
+<ol>
+<li>
+<p>Add <code>redix_pubsub_fastlane</code> to your list of dependencies in <code>mix.exs</code>:</p>
+
+<div class="highlight highlight-source-elixir"><pre><span class="pl-k">def</span> <span class="pl-en">deps</span> <span class="pl-k">do</span>
+  [{<span class="pl-c1">:redix_pubsub_fastlane</span>, <span class="pl-s"><span class="pl-pds">"</span>~&gt; 0.1.0<span class="pl-pds">"</span></span>}]
+<span class="pl-k">end</span></pre></div>
+</li>
+<li>
+<p>Ensure <code>redix_pubsub_fastlane</code> is started before your application:</p>
+
+<div class="highlight highlight-source-elixir"><pre><span class="pl-k">def</span> <span class="pl-en">application</span> <span class="pl-k">do</span>
+  [<span class="pl-c1">applications:</span> [<span class="pl-c1">:redix_pubsub_fastlane</span>]]
+<span class="pl-k">end</span></pre></div>
+</li>
+<li>
+<p>Also you can simply add it to your Mix.config:</p>
+
+<div class="highlight highlight-source-elixir"><pre>config <span class="pl-c1">:redix_pubsub_fastlane</span>,
+  <span class="pl-c1">fastlane:</span> <span class="pl-c1">Some</span>.<span class="pl-c1">DefaultFastlane</span>,
+  <span class="pl-c1">host:</span> <span class="pl-s"><span class="pl-pds">"</span>192.168.1.100<span class="pl-pds">"</span></span>
+</pre></div>
+</li>
+</ol>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>Simply add it to your Supervisor stack:</p>
+
+<div class="highlight highlight-source-elixir"><pre>supervisor(<span class="pl-c1">Redix</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Fastlane</span>, [<span class="pl-c1">MyApp</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Redis</span>, [<span class="pl-c1">host:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>,
+                                                               <span class="pl-c1">port:</span> <span class="pl-c1">6397</span>,
+                                                               <span class="pl-c1">pool_size:</span> <span class="pl-c1">5</span>]])</pre></div>
+
+<p>Or run it by hands:</p>
+
+<div class="highlight highlight-source-elixir"><pre>{<span class="pl-c1">:ok</span>, pubsub_server} <span class="pl-k">=</span> <span class="pl-c1">Redix</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Fastlane</span>.start_link(<span class="pl-c1">MyApp</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Redis</span>)</pre></div>
+
+<h3>
+<a id="config-options" class="anchor" href="#config-options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Config Options</h3>
+
+<table>
+<thead>
+<tr>
+<th align="left">Option</th>
+<th align="left">Description</th>
+<th align="left">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>:name</code></td>
+<td align="left">The required name to register the PubSub processes, ie: <code>MyApp.PubSub</code>
+</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><code>:fastlane</code></td>
+<td align="left">The name of default fastlane module, ie: <code>MyApp.Fastlane</code>
+</td>
+<td align="left"><code>nil</code></td>
+</tr>
+<tr>
+<td align="left"><code>:database</code></td>
+<td align="left">The redis-server database</td>
+<td align="left"><code>""</code></td>
+</tr>
+<tr>
+<td align="left"><code>:host</code></td>
+<td align="left">The redis-server host IP</td>
+<td align="left"><code>"127.0.0.1"</code></td>
+</tr>
+<tr>
+<td align="left"><code>:port</code></td>
+<td align="left">The redis-server port</td>
+<td align="left"><code>6379</code></td>
+</tr>
+<tr>
+<td align="left"><code>:password</code></td>
+<td align="left">The redis-server password</td>
+<td align="left"><code>""</code></td>
+</tr>
+</tbody>
+</table>
+
+<p>Inspired by:</p>
+
+<ul>
+<li><a href="https://github.com/phoenixframework/phoenix_pubsub_redis">phoenix_pubsub_redis</a></li>
+</ul>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>Copyright (c) 2016 Alexander Merkulov</p>
+
+<p>MIT License</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/merqlove/redix_pubsub_fastlane">Redix.PubSub.Fastlane</a> is maintained by <a href="https://github.com/merqlove">merqlove</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
