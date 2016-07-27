@@ -58,6 +58,8 @@ defmodule Redix.PubSub.Fastlane do
 
   Main goal is providing a fastlane path for publisher messages like: `{:redix_pubsub, _, :message, %{channel: channel, ...}}`.
 
+  Any existing subscriptions will not be overrided. If you want to update one, then unsubscribe and subscribe it again.
+
   Imagine: You have a task, that has few subtasks each with its own UUID & must await for published event, but also must know main task ID within every event.
 
   Ie:
