@@ -115,6 +115,10 @@ defmodule Redix.PubSub.FastlaneTest do
       assert_receive {:fastlane, %{channel: "bar_2", pattern: "bar*", payload: "world1"}, [:some_second_id]}
       assert_receive {:fastlane, %{channel: "bar_3", pattern: "bar*", payload: "world2"}, [:some_second_id]}
 
+      assert :ok = Fastlane.punsubscribe(ps, "bar*")
+      publish(ps, "bar_1", "world")
+      refute_receive {:fastlane, %{channel: "bar_1", pattern: "bar*", payload: "world"}, [:some_second_id]}
+
       FastlaneNamespace.stop
     end
 
@@ -130,6 +134,10 @@ defmodule Redix.PubSub.FastlaneTest do
       publish(ps, "bar", {&Poison.encode!/1, %{b: 1}})
       assert_receive {:fastlane, %{channel: "foo", payload: "{\"a\":\"hello1\"}"}, [:some_id]}
       assert_receive {:fastlane, %{channel: "bar", payload: "{\"b\":1}"}, [:some_second_id]}
+
+      assert :ok = Fastlane.unsubscribe(ps, "bar")
+      publish(ps, "bar", {&Poison.encode!/1, %{b: 1}})
+      refute_receive {:fastlane, %{channel: "bar", payload: "{\"b\":1}"}, [:some_second_id]}
 
       FastlaneNamespace.stop
     end
