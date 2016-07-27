@@ -159,7 +159,7 @@ defmodule Redix.PubSub.Fastlane.Server do
 
     case subscribe_to_channel(state, channel, subscription, method) do
       :error -> :error
-      _ -> :ok
+      _      -> :ok
     end
   end
   defp _subscribe(_, _, _, _), do: :error
@@ -192,8 +192,8 @@ defmodule Redix.PubSub.Fastlane.Server do
 
   defp _exclude_ns(name, namespace) when is_bitstring(name) do
     case name |> String.split("#{namespace}.", parts: 2) do
-      ["", channel]      -> channel
-      [_]                -> name
+      ["", channel] -> channel
+      [_]           -> name
     end
   end
   defp _exclude_ns(name, _), do: name

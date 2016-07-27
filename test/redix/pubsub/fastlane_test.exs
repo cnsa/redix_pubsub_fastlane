@@ -6,6 +6,14 @@ defmodule Redix.PubSub.FastlaneTest do
 
   @publish_timeout 30
 
+  setup do
+    {:ok, _} = FastlaneNamespace.start_link(pid: self())
+    on_exit(fn ->
+      FastlaneNamespace.stop
+    end)
+    :ok
+  end
+
   describe "default config" do
     setup do
       {:ok, _} = Fastlane.start_link(MyApp.PubSub.Redis)
@@ -77,8 +85,6 @@ defmodule Redix.PubSub.FastlaneTest do
 
     context "publish" do
       it "standard test", %{conn: ps} do
-        {:ok, _fpid} = FastlaneNamespace.start_link(pid: self())
-
         # First, we subscribe.
         assert :ok = Fastlane.subscribe(ps, "foo", {FastlaneNamespace, [:some_id]})
         assert :ok = Fastlane.subscribe(ps, "bar", {FastlaneNamespace, [:some_second_id]})
@@ -91,13 +97,9 @@ defmodule Redix.PubSub.FastlaneTest do
         assert_receive {:fastlane, %{channel: "foo", payload: "hello"}, [:some_id]}
         publish(ps, "bar", "world")
         assert_receive {:fastlane, %{channel: "bar", payload: "world"}, [:some_second_id]}
-
-        FastlaneNamespace.stop
       end
 
       it "pattern test", %{conn: ps} do
-        {:ok, _fpid} = FastlaneNamespace.start_link(pid: self())
-
         # First, we subscribe.
         assert :ok = Fastlane.psubscribe(ps, "foo*", {FastlaneNamespace, [:some_id]})
         assert :ok = Fastlane.psubscribe(ps, "bar*", {FastlaneNamespace, [:some_second_id]})
@@ -119,13 +121,9 @@ defmodule Redix.PubSub.FastlaneTest do
         assert :ok = Fastlane.punsubscribe(ps, "bar*")
         publish(ps, "bar_1", "world")
         refute_receive {:fastlane, %{channel: "bar_1", pattern: "bar*", payload: "world"}, [:some_second_id]}
-
-        FastlaneNamespace.stop
       end
 
       it "serializer test", %{conn: ps} do
-        {:ok, _fpid} = FastlaneNamespace.start_link(pid: self())
-
         # First, we subscribe.
         assert :ok = Fastlane.subscribe(ps, "foo", {FastlaneNamespace, [:some_id]})
         assert :ok = Fastlane.subscribe(ps, "bar", {FastlaneNamespace, [:some_second_id]})
@@ -139,19 +137,15 @@ defmodule Redix.PubSub.FastlaneTest do
         assert :ok = Fastlane.unsubscribe(ps, "bar")
         publish(ps, "bar", {&Poison.encode!/1, %{b: 1}})
         refute_receive {:fastlane, %{channel: "bar", payload: "{\"b\":1}"}, [:some_second_id]}
-
-        FastlaneNamespace.stop
       end
     end
   end
 
   describe "with custom elements" do
     setup do
-      {:ok, _} = FastlaneNamespace.start_link(pid: self())
       {:ok, _} = Fastlane.start_link(:some_app_name, [pool_size: 10, fastlane: FastlaneNamespace])
       on_exit(fn ->
         Fastlane.stop(:some_app_name)
-        FastlaneNamespace.stop
       end)
       {:ok, %{conn: :some_app_name}}
     end

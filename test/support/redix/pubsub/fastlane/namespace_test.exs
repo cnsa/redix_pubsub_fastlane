@@ -7,10 +7,12 @@ defmodule Redix.PubSub.Fastlane.NamespaceTest do
 
   def init(opts), do: {:ok, opts}
 
-  def stop, do: GenServer.cast(FastlaneTestNamespace, :stop)
+  def stop do
+    GenServer.cast({FastlaneTestNamespace, node()}, :stop)
+  end
 
   def fastlane(payload, options) do
-    GenServer.cast(FastlaneTestNamespace, {:fastlane, payload, options})
+    GenServer.cast({FastlaneTestNamespace, node()}, {:fastlane, payload, options})
     :ok
   end
 
