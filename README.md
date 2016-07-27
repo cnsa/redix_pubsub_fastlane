@@ -46,7 +46,7 @@ Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {My.Fastlane, ["
 3. Also you can simply add it to your Mix.config:
 
   ```elixir
-  config :redix_pubsub_fastlane,
+  config :redix_pubsub_fastlane, MyApp.PubSub.Redis,
     fastlane: My.Fastlane,
     host: "192.168.1.100"
 

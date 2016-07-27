@@ -6,7 +6,7 @@ defmodule Redix.PubSub.Fastlane do
 
   To use `Redix.PubSub.Fastlane`, simply add it to your Mix.config:
 
-      config :redix_pubsub_fastlane,
+      config :redix_pubsub_fastlane, MyApp.PubSub.Redis,
         fastlane: My.Fastlane,
         host: "192.168.1.100"
 

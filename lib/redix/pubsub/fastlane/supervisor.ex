@@ -44,7 +44,7 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
 
   @doc false
   def init([server_name, opts]) do
-    opts = Keyword.merge(@defaults, config) |> Keyword.merge(opts)
+    opts = Keyword.merge(@defaults, config(server_name)) |> Keyword.merge(opts)
     redis_opts = Keyword.take(opts, [:host, :port, :password, :database])
 
     pool_name   = Module.concat(server_name, Pool)
@@ -88,8 +88,10 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
     end
   end
 
-  defp config do
-    Application.get_all_env(@config_key)
-    |> Keyword.take([:host, :port, :password, :database, :password, :fastlane])
+  defp config(name) do
+    case Application.get_env(@config_key, name) do
+      nil ->[]
+      config -> Keyword.take(config, [:host, :port, :password, :database, :password, :fastlane])
+    end
   end
 end
