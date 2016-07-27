@@ -21,7 +21,7 @@
     <section class="main-content">
       <p><a href="https://travis-ci.org/merqlove/redix_pubsub_fastlane"><img src="https://travis-ci.org/merqlove/redix_pubsub_fastlane.svg?branch=master" alt="Build Status"></a>
 <a href="https://coveralls.io/github/merqlove/redix_pubsub_fastlane?branch=master"><img src="https://coveralls.io/repos/github/merqlove/redix_pubsub_fastlane/badge.svg?branch=master" alt="Coverage Status"></a>
-<a href="https://hex.pm/packages/redix_pubsub_fastlane"><img src="https://img.shields.io/hexpm/v/plug.svg?maxAge=2592000" alt="Hex.pm"></a>
+<a href="https://hex.pm/packages/redix_pubsub_fastlane"><img src="https://img.shields.io/hexpm/v/redix_pubsub_fastlane.svg?maxAge=2592000" alt="Hex.pm"></a>
 <a href="https://beta.hexfaktor.org/github/merqlove/redix_pubsub_fastlane"><img src="https://beta.hexfaktor.org/badge/prod/github/merqlove/redix_pubsub_fastlane.svg" alt="Deps Status"></a></p>
 
 <p>See the <a href="https://hexdocs.pm/redix_pubsub_fastlane/">docs</a> for more information.</p>
@@ -62,8 +62,8 @@
 <li>
 <p>Also you can simply add it to your Mix.config:</p>
 
-<div class="highlight highlight-source-elixir"><pre>config <span class="pl-c1">:redix_pubsub_fastlane</span>,
-  <span class="pl-c1">fastlane:</span> <span class="pl-c1">Some</span>.<span class="pl-c1">DefaultFastlane</span>,
+<div class="highlight highlight-source-elixir"><pre>config <span class="pl-c1">:redix_pubsub_fastlane</span>, <span class="pl-c1">MyApp</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Redis</span>,
+  <span class="pl-c1">fastlane:</span> <span class="pl-c1">My</span>.<span class="pl-c1">Fastlane</span>,
   <span class="pl-c1">host:</span> <span class="pl-s"><span class="pl-pds">"</span>192.168.1.100<span class="pl-pds">"</span></span>
 </pre></div>
 </li>
@@ -75,8 +75,8 @@
 <p>Simply add it to your Supervisor stack:</p>
 
 <div class="highlight highlight-source-elixir"><pre>supervisor(<span class="pl-c1">Redix</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Fastlane</span>, [<span class="pl-c1">MyApp</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Redis</span>, [<span class="pl-c1">host:</span> <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>,
-                                                               <span class="pl-c1">port:</span> <span class="pl-c1">6397</span>,
-                                                               <span class="pl-c1">pool_size:</span> <span class="pl-c1">5</span>]])</pre></div>
+                                                        <span class="pl-c1">port:</span> <span class="pl-c1">6397</span>,
+                                                        <span class="pl-c1">pool_size:</span> <span class="pl-c1">5</span>]])</pre></div>
 
 <p>Or run it by hands:</p>
 
@@ -102,7 +102,7 @@
 </tr>
 <tr>
 <td align="left"><code>:fastlane</code></td>
-<td align="left">The name of default fastlane module, ie: <code>MyApp.Fastlane</code>
+<td align="left">The name of default fastlane module, ie: <code>My.Fastlane</code>
 </td>
 <td align="left"><code>nil</code></td>
 </tr>
