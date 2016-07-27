@@ -104,16 +104,16 @@ defmodule Redix.PubSub.Fastlane.Server do
     {:noreply, state}
   end
 
+  def handle_info({:EXIT, _, _reason}, state) do
+    {:noreply, state}
+  end
+
   @doc """
   Connection establishment and shutdown loop
   On init, an initial conection to redis is attempted when starting `:redix`
   """
   def terminate(_reason, _state) do
     :ok
-  end
-
-  def handle_info({:EXIT, _, _reason}, state) do
-    {:noreply, state}
   end
 
   defp broadcast_message(channels, channel, message, state) do

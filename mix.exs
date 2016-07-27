@@ -7,7 +7,7 @@ defmodule RedixPubsubFastlane.Mixfile do
   def project do
     [app: :redix_pubsub_fastlane,
      version: @version,
-     elixir: "~> 1.0",
+     elixir: "~> 1.2",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -37,9 +37,9 @@ defmodule RedixPubsubFastlane.Mixfile do
       {:redix_pubsub, "~> 0.1"},
       {:poolboy, "~> 1.5.1 or ~> 1.6"},
       {:poison, "~> 2.0", only: :test},
-      {:ex_doc, "~> 0.11.1", only: :docs},
+      {:ex_doc, "~> 0.11", only: :docs},
       {:earmark, ">= 0.0.0", only: :docs},
-      {:ex_spec, "~> 2.0.0", only: :test},
+      {:ex_spec, ex_12_13("~> 1.1.0", "~> 2.0.0"), only: :test},
       {:excoveralls, "~> 0.5", only: :test},
     ]
   end
@@ -48,9 +48,13 @@ defmodule RedixPubsubFastlane.Mixfile do
     Enum.reduce(tasks, [], fn(key, acc) -> Keyword.put(acc, :"#{key}", env) end)
   end
 
+  defp ex_12_13(v12, v13), do: if ex_13, do: v13, else: v12
+
+  defp ex_13, do: Version.match?(System.version, ">= 1.3.0")
+
   defp package do
     [
-      name: "Redix.Pubsub.Fastlane",
+      name: :redix_pubsub_fastlane,
       maintainers: ["Alexander Merkulov"],
       licenses: ["MIT"],
       links: %{
