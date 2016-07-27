@@ -33,19 +33,28 @@ defmodule Redix.PubSub.Fastlane do
 
   Subscription process:
       defmodule My.Fastlane do
-        def fastlane(payload, options) do
+        use GenServer
+
+        def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, opts, [])
+
+        def init(opts), do: {:ok, opts}
+
+        def fastlane(pid, payload, options) do
+          IO.inspect(pid)
           IO.inspect(payload)
           IO.inspect(options)
         end
       end
-
+      {:ok, pid} = My.Fastlane.start_link
+      #=> {:ok, #<PID:444>}
       {:ok, _pubsub} = Redix.PubSub.Fastlane.start_link(MyApp.PubSub.Redis)
-      Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "my_channel", {My.Fastlane, [:some_id]})
+      Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "my_channel", {pid, My.Fastlane, [:some_id]})
       #=> :ok
   After a subscription, messages published to a channel are delivered `My.Fastlane.fastlane/2`,
   as it subscribed to that channel via `Redix.PubSub.Fastlane`:
       Redix.PubSub.Fastlane.publish(MyApp.PubSub.Redis, "my_channel", "hello")
       #=> :ok
+      #=> #<PID:444>
       #=> "hello"
       #=> [:some_id]
 
@@ -61,7 +70,7 @@ defmodule Redix.PubSub.Fastlane do
   Imagine: You have a task, that has few subtasks each with its own UUID & must await for published event, but also must know main task ID within every event.
 
   Ie:
-      Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {My.Fastlane, ["some_id"]})
+      Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {pid, My.Fastlane, ["some_id"]})
 
   If you provide it, the fastlane handler is notified of a cached message instead of the normal subscriber.
   Fastlane handlers must implement `fastlane/2` callbacks which accepts similar format:
@@ -90,9 +99,11 @@ defmodule Redix.PubSub.Fastlane do
   Subscribes fastlane to the PubSub adapter by channel.
     * `server` - The Pid registered name of the server
     * `channel` - The channel to subscribe to, ie: `"users:123"`
-    * `fastlane` - The tuple with fastlane module and it's arguments, ie: `{My.Fastlane, [:some_id]}`
+    * `fastlane` - The tuple with fastlane module and it's arguments, ie: `{pid, My.Fastlane, [:some_id]}`
   ## Examples
-      iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {My.Fastlane, [:some_id]})
+      {:ok, pid} = My.Fastlane.start_link
+      #=> {:ok, #<PID:444>}
+      iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {pid, My.Fastlane, [:some_id]})
       :ok
   """
   @spec subscribe(atom, binary, term) :: :ok
@@ -106,7 +117,9 @@ defmodule Redix.PubSub.Fastlane do
     * `server` - The Pid registered name of the server
     * `channel` - The channel to unsubscribe from, ie: `"users:123"`
   ## Examples
-      iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {My.Fastlane, [:some_id]})
+      {:ok, pid} = My.Fastlane.start_link
+      #=> {:ok, #<PID:444>}
+      iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {pid, My.Fastlane, [:some_id]})
       :ok
       iex> Redix.PubSub.Fastlane.unsubscribe(MyApp.PubSub.Redis, "users:123")
       :ok
@@ -120,9 +133,11 @@ defmodule Redix.PubSub.Fastlane do
   Subscribes fastlane to the PubSub adapter by pattern.
     * `server` - The Pid registered name of the server
     * `pattern` - The pattern to subscribe to, ie: `"ba*"`
-    * `fastlane` - The tuple with fastlane module and it's arguments, ie: `{My.Fastlane, [:some_id]}`
+    * `fastlane` - The tuple with fastlane module and it's arguments, ie: `{pid, My.Fastlane, [:some_id]}`
   ## Examples
-      iex> Redix.PubSub.Fastlane.psubscribe(MyApp.PubSub.Redis, "ba*", {My.Fastlane, [:some_id]})
+      {:ok, pid} = My.Fastlane.start_link
+      #=> {:ok, #<PID:444>}
+      iex> Redix.PubSub.Fastlane.psubscribe(MyApp.PubSub.Redis, "ba*", {pid, My.Fastlane, [:some_id]})
       :ok
   """
   @spec psubscribe(atom, String.t, term) :: :ok
@@ -136,7 +151,9 @@ defmodule Redix.PubSub.Fastlane do
     * `server` - The Pid registered name of the server
     * `pattern` - The pattern to unsubscribe from, ie: `"ba*"`
   ## Examples
-      iex> Redix.PubSub.Fastlane.psubscribe(MyApp.PubSub.Redis, "ba*", {My.Fastlane, [:some_id]})
+      {:ok, pid} = My.Fastlane.start_link
+      #=> {:ok, #<PID:444>}
+      iex> Redix.PubSub.Fastlane.psubscribe(MyApp.PubSub.Redis, "ba*", {pid, My.Fastlane, [:some_id]})
       :ok
       iex> Redix.PubSub.Fastlane.punsubscribe(MyApp.PubSub.Redis, "ba*")
       :ok
@@ -152,10 +169,13 @@ defmodule Redix.PubSub.Fastlane do
     * `channel` - The channel to publish to, ie: `"users:123"`
     * `message` - The payload of the publish
   ## Examples
-      iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {My.Fastlane, [:some_id]})
+      {:ok, pid} = My.Fastlane.start_link
+      #=> {:ok, #<PID:444>}
+      iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {pid, My.Fastlane, [:some_id]})
       :ok
       iex> Redix.PubSub.Fastlane.publish(MyApp.PubSub.Redis, "users:123", "hello")
       :ok
+      #<PID:444>
       "hello"
       [:some_id]
   """

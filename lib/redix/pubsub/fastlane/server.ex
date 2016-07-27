@@ -9,7 +9,7 @@ defmodule Redix.PubSub.Fastlane.Server do
 
   defmodule Subscription do
     @moduledoc false
-    defstruct parent: nil, options: [], channel: nil
+    defstruct parent: nil, options: [], channel: nil, pid: nil
   end
 
   @doc """
@@ -132,7 +132,7 @@ defmodule Redix.PubSub.Fastlane.Server do
       {:ok, %{subscription: subscription}} ->
         module = subscription.parent || state.fastlane
         payload = exclude_ns(message, state)
-        module.fastlane(payload, subscription.options)
+        module.fastlane(subscription.pid, payload, subscription.options)
       _ -> nil
     end
   end
@@ -160,8 +160,8 @@ defmodule Redix.PubSub.Fastlane.Server do
     end
   end
 
-  defp _subscribe(channel, {parent, options}, state, method) when is_atom(parent) and is_list(options)  do
-    subscription = %Subscription{parent: parent, options: options, channel: channel}
+  defp _subscribe(channel, {pid, parent, options}, state, method) when is_atom(parent) and is_list(options)  do
+    subscription = %Subscription{pid: pid, parent: parent, options: options, channel: channel}
 
     case subscribe_to_channel(state, channel, subscription, method) do
       :error -> :error

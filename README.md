@@ -24,7 +24,7 @@ Imagine: You have a `Main` task, that depends on few subtasks, each with its own
 Ie:
 
 ```elixir
-Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {My.Fastlane, ["some_id"]})
+Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {pid, My.Fastlane, ["some_id"]})
 ```
 
 ## Installation

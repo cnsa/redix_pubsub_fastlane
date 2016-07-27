@@ -11,13 +11,13 @@ defmodule Redix.PubSub.Fastlane.NamespaceTest do
     GenServer.cast({FastlaneTestNamespace, node()}, :stop)
   end
 
-  def fastlane(payload, options) do
-    GenServer.cast({FastlaneTestNamespace, node()}, {:fastlane, payload, options})
+  def fastlane(pid, payload, options) do
+    GenServer.cast({FastlaneTestNamespace, node()}, {:fastlane, pid, payload, options})
     :ok
   end
 
-  def handle_cast({:fastlane, payload, options}, state) do
-    send(state[:pid], {:fastlane, payload, options})
+  def handle_cast({:fastlane, pid, payload, options}, state) do
+    send(state[:pid], {:fastlane, pid, payload, options})
     {:noreply, state}
   end
 
