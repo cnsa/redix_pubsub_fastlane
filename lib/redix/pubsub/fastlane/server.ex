@@ -90,14 +90,13 @@ defmodule Redix.PubSub.Fastlane.Server do
     {:stop, :normal, state}
   end
 
-  def handle_info({:redix_pubsub, redix_pid, :message, %{payload: payload, channel: channel}}, %{channels: channels, redix_pid: redix_pid} = state) do
-    case _find(channels, channel) do
-      {:ok, %{subscription: subscription}} ->
-        module = subscription.parent || state.fastlane
-        module.fastlane(payload, subscription.options)
-      _ -> nil
-    end
+  def handle_info({:redix_pubsub, redix_pid, :message, %{channel: channel} = message}, %{channels: channels, redix_pid: redix_pid} = state) do
+    broadcast_message(channels, channel, message, state)
+    {:noreply, state}
+  end
 
+  def handle_info({:redix_pubsub, redix_pid, :pmessage, %{pattern: pattern} = message}, %{channels: channels, redix_pid: redix_pid} = state) do
+    broadcast_message(channels, pattern, message, state)
     {:noreply, state}
   end
 
@@ -113,6 +112,19 @@ defmodule Redix.PubSub.Fastlane.Server do
     :ok
   end
 
+  def handle_info({:EXIT, _, _reason}, state) do
+    {:noreply, state}
+  end
+
+  defp broadcast_message(channels, channel, message, state) do
+    case _find(channels, channel) do
+      {:ok, %{subscription: subscription}} ->
+        module = subscription.parent || state.fastlane
+        module.fastlane(message, subscription.options)
+      _ -> nil
+    end
+  end
+
   defp _find(channels, channel) do
     case :ets.lookup(channels, channel) do
       [{^channel, subscription}] -> {:ok, %{ id: channel, subscription: subscription}}
@@ -120,15 +132,15 @@ defmodule Redix.PubSub.Fastlane.Server do
     end
   end
 
-  defp _publish(channel, {serializer, message}, server_name) when is_function(serializer, 1) do
-    _publish_message(channel, serializer.(message), server_name)
+  defp _publish(channel, {serializer, message}, pool_name) when is_function(serializer, 1) do
+    _publish_message(channel, serializer.(message), pool_name)
   end
-  defp _publish(channel, message, server_name) do
-    _publish_message(channel, message, server_name)
+  defp _publish(channel, message, pool_name) do
+    _publish_message(channel, message, pool_name)
   end
 
-  defp _publish_message(channel, message, server_name) do
-    :poolboy.transaction server_name, fn(redix_pid) ->
+  defp _publish_message(channel, message, pool_name) do
+    :poolboy.transaction pool_name, fn(redix_pid) ->
       case Redix.command(redix_pid, ["PUBLISH", channel, message]) do
         {:ok, _} -> :ok
         {:error, reason} -> {:error, reason}
@@ -148,8 +160,6 @@ defmodule Redix.PubSub.Fastlane.Server do
 
   defp _unsubscribe(channel, %{connected: true, redix_pid: redix_pid, channels: channels}, method) do
     true = :ets.delete(channels, channel)
-    IO.inspect channel
-    IO.inspect method
     apply(Redix.PubSub, method, [redix_pid, channel, self()])
     :ok
   end
@@ -157,8 +167,6 @@ defmodule Redix.PubSub.Fastlane.Server do
 
   defp subscribe_to_channel(%{connected: true, redix_pid: redix_pid, channels: channels}, channel, %Subscription{} = subscription, method) do
     true = :ets.insert(channels, {channel, subscription})
-    IO.inspect channel
-    IO.inspect method
     apply(Redix.PubSub, method, [redix_pid, channel, self()])
   end
   defp subscribe_to_channel(_, _, _, _), do: :error

@@ -2,6 +2,7 @@
   "earmark": {:hex, :earmark, "0.2.1", "ba6d26ceb16106d069b289df66751734802777a3cbb6787026dd800ffeb850f3", [:mix], []},
   "ex_doc": {:hex, :ex_doc, "0.11.5", "0dc51cb84f8312162a2313d6c71573a9afa332333d8a332bb12540861b9834db", [:mix], [{:earmark, "~> 0.1.17 or ~> 0.2", [hex: :earmark, optional: true]}]},
   "ex_spec": {:hex, :ex_spec, "2.0.0", "7fedc6f3f7fe9b5bc14f17f94199cac4d2abe389727291467ee7708dcf6544a0", [:mix], []},
+  "poison": {:hex, :poison, "2.2.0", "4763b69a8a77bd77d26f477d196428b741261a761257ff1cf92753a0d4d24a63", [:mix], []},
   "poolboy": {:hex, :poolboy, "1.5.1", "6b46163901cfd0a1b43d692657ed9d7e599853b3b21b95ae5ae0a777cf9b6ca8", [:rebar], []},
   "redix": {:hex, :redix, "0.4.0", "c8cfad755252e5441c4119437ba3a8989518af7aa90dbd6f4ff7207b72e4a967", [:mix], [{:connection, "~> 1.0.0", [hex: :connection, optional: false]}]},
   "redix_pubsub": {:hex, :redix_pubsub, "0.1.0", "b408913bf2287ed8749b6f2abe8d7cecdcd6cb4dbd9635ecc444c183100bed00", [:mix], [{:connection, "~> 1.0", [hex: :connection, optional: false]}, {:redix, "~> 0.4.0", [hex: :redix, optional: false]}]}}
