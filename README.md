@@ -9,6 +9,8 @@
 
 See the [docs](https://hexdocs.pm/redix_pubsub_fastlane/) for more information.
 
+TL;DR [Example Phoenix app](https://github.com/merqlove/elixir-docker-compose)
+
 ## About
 
 Works as a simple wrapper over [Redix.PubSub](https://hexdocs.pm/redix_pubsub/).
