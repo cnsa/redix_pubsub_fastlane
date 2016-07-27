@@ -51,7 +51,7 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
     server_opts = Keyword.merge(opts, pool_name: pool_name,
                                       server_name: server_name,
                                       fastlane: opts[:fastlane],
-                                      namespace: server_name)
+                                      namespace: cleanup_namespace(server_name))
 
     pool_opts = [
       name: {:local, pool_name},
@@ -80,6 +80,13 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
     :ok
   end
   defp stop_process(_, _), do: :error
+
+  defp cleanup_namespace(name) do
+    case "#{name}" do
+      "Elixir." <> suffix -> suffix
+      _                   -> name
+    end
+  end
 
   defp config do
     Application.get_all_env(@config_key)

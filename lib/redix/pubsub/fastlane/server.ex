@@ -63,7 +63,11 @@ defmodule Redix.PubSub.Fastlane.Server do
   def publish(pubsub_server, channel, message), do: GenServer.call(pubsub_server, {:publish, channel, message})
 
   def handle_call({:publish, channel, message}, _from, state) do
-    {:reply, _publish(channel, message, state.pool_name), state}
+    result =
+      include_ns(channel, state)
+      |> _publish(message, state.pool_name)
+
+    {:reply, result, state}
   end
 
   def handle_call(:lookup, _from, state) do
@@ -116,11 +120,13 @@ defmodule Redix.PubSub.Fastlane.Server do
     :ok
   end
 
-  defp broadcast_message(channels, channel, message, state) do
+  defp broadcast_message(channels, channel_w_namespace, message, state) do
+    channel = _exclude_ns(channel_w_namespace, state.namespace)
     case _find(channels, channel) do
       {:ok, %{subscription: subscription}} ->
         module = subscription.parent || state.fastlane
-        module.fastlane(message, subscription.options)
+        payload = exclude_ns(message, state)
+        module.fastlane(payload, subscription.options)
       _ -> nil
     end
   end
@@ -158,18 +164,39 @@ defmodule Redix.PubSub.Fastlane.Server do
   end
   defp _subscribe(_, _, _, _), do: :error
 
-  defp _unsubscribe(channel, %{connected: true, redix_pid: redix_pid, channels: channels}, method) do
+  defp _unsubscribe(channel, %{connected: true, redix_pid: redix_pid, channels: channels} = state, method) do
     true = :ets.delete(channels, channel)
-    apply(Redix.PubSub, method, [redix_pid, channel, self()])
+    apply(Redix.PubSub, method, [redix_pid, include_ns(channel, state), self()])
     :ok
   end
   defp _unsubscribe(_, _, _), do: :error
 
-  defp subscribe_to_channel(%{connected: true, redix_pid: redix_pid, channels: channels}, channel, %Subscription{} = subscription, method) do
+  defp subscribe_to_channel(%{connected: true, redix_pid: redix_pid, channels: channels} = state, channel, %Subscription{} = subscription, method) do
     true = :ets.insert(channels, {channel, subscription})
-    apply(Redix.PubSub, method, [redix_pid, channel, self()])
+    apply(Redix.PubSub, method, [redix_pid, include_ns(channel, state), self()])
   end
   defp subscribe_to_channel(_, _, _, _), do: :error
+
+  defp include_ns(name, %{namespace: namespace}) when is_bitstring(namespace) or is_atom(namespace) do
+    "#{namespace}.#{name}"
+  end
+  defp include_ns(name, _), do: name
+
+  defp exclude_ns(%{pattern: pattern, channel: channel} = message, %{namespace: namespace}) do
+    %{message | pattern: _exclude_ns(pattern, namespace), channel: _exclude_ns(channel, namespace)}
+  end
+  defp exclude_ns(%{channel: channel} = message, %{namespace: namespace}) do
+    %{message | channel: _exclude_ns(channel, namespace)}
+  end
+  defp exclude_ns(message, _), do: message
+
+  defp _exclude_ns(name, namespace) when is_bitstring(name) do
+    case name |> String.split("#{namespace}.", parts: 2) do
+      ["", channel]      -> channel
+      [_]                -> name
+    end
+  end
+  defp _exclude_ns(name, _), do: name
 
   defp establish_conn(state) do
     redis_opts = Keyword.take(state.opts, @redix_opts)
