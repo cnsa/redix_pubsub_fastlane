@@ -95,7 +95,7 @@ defmodule Redix.PubSub.Fastlane do
       iex> Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "users:123", {My.Fastlane, [:some_id]})
       :ok
   """
-  @spec subscribe(atom, binary, term) :: :ok | {:error, term}
+  @spec subscribe(atom, binary, term) :: :ok
   def subscribe(server, channel, fastlane)
     when is_atom(server) and is_binary(channel) and is_tuple(fastlane) do
     Server.subscribe(server, channel, fastlane)
@@ -111,7 +111,7 @@ defmodule Redix.PubSub.Fastlane do
       iex> Redix.PubSub.Fastlane.unsubscribe(MyApp.PubSub.Redis, "users:123")
       :ok
   """
-  @spec unsubscribe(atom, binary) :: :ok | {:error, term}
+  @spec unsubscribe(atom, binary) :: :ok
   def unsubscribe(server, channel)
     when is_atom(server) and is_binary(channel),
       do: Server.unsubscribe(server, channel)
@@ -125,7 +125,7 @@ defmodule Redix.PubSub.Fastlane do
       iex> Redix.PubSub.Fastlane.psubscribe(MyApp.PubSub.Redis, "ba*", {My.Fastlane, [:some_id]})
       :ok
   """
-  @spec psubscribe(atom, String.t, term) :: :ok | {:error, term}
+  @spec psubscribe(atom, String.t, term) :: :ok
   def psubscribe(server, pattern, fastlane)
     when is_atom(server) and is_tuple(fastlane) do
     Server.psubscribe(server, pattern, fastlane)
@@ -141,7 +141,7 @@ defmodule Redix.PubSub.Fastlane do
       iex> Redix.PubSub.Fastlane.punsubscribe(MyApp.PubSub.Redis, "ba*")
       :ok
   """
-  @spec punsubscribe(atom, String.t) :: :ok | {:error, term}
+  @spec punsubscribe(atom, String.t) :: :ok
   def punsubscribe(server, pattern) when is_atom(server),
       do: Server.punsubscribe(server, pattern)
 
