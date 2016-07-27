@@ -35,7 +35,7 @@ defmodule Redix.PubSub.Fastlane do
       defmodule My.Fastlane do
         use GenServer
 
-        def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, opts, [])
+        def start_link(opts \\\\ []), do: GenServer.start_link(__MODULE__, opts, [])
 
         def init(opts), do: {:ok, opts}
 
@@ -50,7 +50,7 @@ defmodule Redix.PubSub.Fastlane do
       {:ok, _pubsub} = Redix.PubSub.Fastlane.start_link(MyApp.PubSub.Redis)
       Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "my_channel", {pid, My.Fastlane, [:some_id]})
       #=> :ok
-  After a subscription, messages published to a channel are delivered `My.Fastlane.fastlane/2`,
+  After a subscription, messages published to a channel are delivered `My.Fastlane.fastlane/3`,
   as it subscribed to that channel via `Redix.PubSub.Fastlane`:
       Redix.PubSub.Fastlane.publish(MyApp.PubSub.Redis, "my_channel", "hello")
       #=> :ok
@@ -73,9 +73,9 @@ defmodule Redix.PubSub.Fastlane do
       Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {pid, My.Fastlane, ["some_id"]})
 
   If you provide it, the fastlane handler is notified of a cached message instead of the normal subscriber.
-  Fastlane handlers must implement `fastlane/2` callbacks which accepts similar format:
+  Fastlane handlers must implement `fastlane/3` callbacks which accepts similar format:
 
-      def fastlane(%{channel: channel, payload: payload}, [:some_id])
+      def fastlane(pid, %{channel: channel, payload: payload}, [:some_id])
 
   And returns a fastlaned format for the handler.
   """
