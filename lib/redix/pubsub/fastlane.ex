@@ -7,7 +7,7 @@ defmodule Redix.PubSub.Fastlane do
   To use `Redix.PubSub.Fastlane`, simply add it to your Mix.config:
 
       config :redix_pubsub_fastlane,
-        fastlane: Some.DefaultFastlane,
+        fastlane: My.Fastlane,
         host: "192.168.1.100"
 
   For full list of options: `Redix.PubSub.Fastlane.Supervisor`
@@ -26,13 +26,13 @@ defmodule Redix.PubSub.Fastlane do
 
   Simply add it to your Supervisor stack:
       supervisor(Redix.PubSub.Fastlane, [MyApp.PubSub.Redis, [host: "localhost",
-                                                                         port: 6397,
-                                                                         pool_size: 5]]),
+                                                              port: 6397,
+                                                              pool_size: 5]]),
   Or run it by hands:
       {:ok, _} = Redix.PubSub.Fastlane.start_link(MyApp.PubSub.Redis)
 
   Subscription process:
-      defmodule Some.Fastlane.Namespace do
+      defmodule My.Fastlane do
         def fastlane(payload, options) do
           IO.inspect(payload)
           IO.inspect(options)
@@ -40,10 +40,10 @@ defmodule Redix.PubSub.Fastlane do
       end
 
       {:ok, _pubsub} = Redix.PubSub.Fastlane.start_link(MyApp.PubSub.Redis)
-      Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "my_channel", {Some.Fastlane.Namespace, [:some_id]})
+      Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "my_channel", {My.Fastlane, [:some_id]})
       #=> :ok
-  After a subscription, messages published to a channel are delivered `Some.Fastlane.Namespace.fastlane/2`,
-  as it subscribed to that channel via `Redix.PubSub.Fastlane` or `Redix.PubSub`:
+  After a subscription, messages published to a channel are delivered `My.Fastlane.fastlane/2`,
+  as it subscribed to that channel via `Redix.PubSub.Fastlane`:
       Redix.PubSub.Fastlane.publish(MyApp.PubSub.Redis, "my_channel", "hello")
       #=> :ok
       #=> "hello"
@@ -56,7 +56,7 @@ defmodule Redix.PubSub.Fastlane do
 
   Works as a simple wrapper over Redix.PubSub.
 
-  Main goal is providing a fastlane path for the publisher with `{:redix_pubsub, _, :message, %{channel: channel, ...}}` events.
+  Main goal is providing a fastlane path for publisher messages like: `{:redix_pubsub, _, :message, %{channel: channel, ...}}`.
 
   Imagine: You have a task, that has few subtasks each with its own UUID & must await for published event, but also must know main task ID within every event.
 

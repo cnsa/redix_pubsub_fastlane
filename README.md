@@ -47,7 +47,7 @@ Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {My.Fastlane, ["
 
   ```elixir
   config :redix_pubsub_fastlane,
-    fastlane: Some.DefaultFastlane,
+    fastlane: My.Fastlane,
     host: "192.168.1.100"
 
   ```
@@ -58,8 +58,8 @@ Simply add it to your Supervisor stack:
 
 ```elixir
 supervisor(Redix.PubSub.Fastlane, [MyApp.PubSub.Redis, [host: "localhost",
-                                                               port: 6397,
-                                                               pool_size: 5]])
+                                                        port: 6397,
+                                                        pool_size: 5]])
 ```
 
 Or run it by hands:
@@ -73,7 +73,7 @@ Or run it by hands:
 Option       | Description                                                            | Default        |
 :----------- | :--------------------------------------------------------------------- | :------------- |
 `:name`      | The required name to register the PubSub processes, ie: `MyApp.PubSub` |                |
-`:fastlane`  | The name of default fastlane module, ie: `MyApp.Fastlane`              | `nil`          |
+`:fastlane`  | The name of default fastlane module, ie: `My.Fastlane`                 | `nil`          |
 `:database`  | The redis-server database                                              | `""`           |
 `:host`      | The redis-server host IP                                               | `"127.0.0.1"`  |
 `:port`      | The redis-server port                                                  | `6379`         |
