@@ -53,7 +53,8 @@
 <p>Add <code>redix_pubsub_fastlane</code> to your list of dependencies in <code>mix.exs</code>:</p>
 
 <div class="highlight highlight-source-elixir"><pre><span class="pl-k">def</span> <span class="pl-en">deps</span> <span class="pl-k">do</span>
-  [{<span class="pl-c1">:redix_pubsub_fastlane</span>, <span class="pl-s"><span class="pl-pds">"</span>~&gt; 0.1.0<span class="pl-pds">"</span></span>}]
+  [{<span class="pl-c1">:redix_pubsub_fastlane</span>, <span class="pl-s"><span class="pl-pds">"</span>~&gt; 0.1.0<span class="pl-pds">"</span></span>},
+   {<span class="pl-c1">:redix_pubsub</span>, <span class="pl-s"><span class="pl-pds">"</span>~&gt; 0.1.0<span class="pl-pds">"</span></span>, <span class="pl-c1">github:</span> <span class="pl-s"><span class="pl-pds">"</span>whatyouhide/redix_pubsub<span class="pl-pds">"</span></span>}]
 <span class="pl-k">end</span></pre></div>
 </li>
 <li>
@@ -106,9 +107,15 @@
 </tr>
 <tr>
 <td align="left"><code>:fastlane</code></td>
-<td align="left">The name of default fastlane module, ie: <code>My.Fastlane</code>
+<td align="left">The name of base fastlane module, ie: <code>My.Fastlane</code>
 </td>
-<td align="left"><code>nil</code></td>
+<td align="left">none</td>
+</tr>
+<tr>
+<td align="left"><code>:decoder</code></td>
+<td align="left">The decoder method for payloads, ie: <code>&amp;Poison.decode!/1</code>
+</td>
+<td align="left">none</td>
 </tr>
 <tr>
 <td align="left"><code>:database</code></td>
