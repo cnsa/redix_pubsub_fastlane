@@ -55,26 +55,33 @@ defmodule Redix.PubSub.Fastlane.Server do
   def list(pubsub_server, channel), do: GenServer.call(pubsub_server, {:list, channel})
 
   @doc false
-  def subscribe(pubsub_server, from, channel, fastlane), do: GenServer.call(pubsub_server, {:subscribe, from, channel, fastlane, :subscribe})
+  def subscribe(pubsub_server, from, channel, fastlane) do
+    GenServer.cast(pubsub_server, {:subscribe, from, channel, fastlane, :subscribe})
+    :ok
+  end
 
   @doc false
-  def psubscribe(pubsub_server, from, pattern, fastlane), do: GenServer.call(pubsub_server, {:subscribe, from, pattern, fastlane, :psubscribe})
+  def psubscribe(pubsub_server, from, pattern, fastlane) do
+    GenServer.cast(pubsub_server, {:subscribe, from, pattern, fastlane, :psubscribe})
+    :ok
+  end
 
   @doc false
-  def unsubscribe(pubsub_server, from, channel), do: GenServer.call(pubsub_server, {:unsubscribe, from, channel, :unsubscribe})
+  def unsubscribe(pubsub_server, from, channel) do
+    GenServer.cast(pubsub_server, {:unsubscribe, from, channel, :unsubscribe})
+    :ok
+  end
 
   @doc false
-  def punsubscribe(pubsub_server, from, pattern), do: GenServer.call(pubsub_server, {:unsubscribe, from, pattern, :punsubscribe})
+  def punsubscribe(pubsub_server, from, pattern) do
+    GenServer.cast(pubsub_server, {:unsubscribe, from, pattern, :punsubscribe})
+    :ok
+  end
 
   @doc false
-  def publish(pubsub_server, channel, message), do: GenServer.call(pubsub_server, {:publish, channel, message})
-
-  def handle_call({:publish, channel, message}, _from, state) do
-    result =
-      include_ns(channel, state)
-      |> _publish(message, state.pool_name)
-
-    {:reply, result, state}
+  def publish(pubsub_server, channel, message) do
+    GenServer.cast(pubsub_server, {:publish, channel, message})
+    :ok
   end
 
   def handle_call(:lookup, _from, state) do
@@ -93,14 +100,21 @@ defmodule Redix.PubSub.Fastlane.Server do
     {:reply, result, state}
   end
 
-  def handle_call({:subscribe, from, channel, fastlane, method}, _from, %{redix_pid: _} = state) do
-    result = _subscribe(from, channel, fastlane, state, method)
-    {:reply, result, state}
+  def handle_cast({:publish, channel, message}, state) do
+    include_ns(channel, state)
+    |> _publish(message, state.pool_name)
+
+    {:noreply, state}
   end
 
-  def handle_call({:unsubscribe, from, channel, method}, _from, %{redix_pid: _} = state) do
-    result = _unsubscribe(from, channel, state, method)
-    {:reply, result, state}
+  def handle_cast({:subscribe, from, channel, fastlane, method}, %{redix_pid: _} = state) do
+    _subscribe(from, channel, fastlane, state, method)
+    {:noreply, state}
+  end
+
+  def handle_cast({:unsubscribe, from, channel, method}, %{redix_pid: _} = state) do
+    _unsubscribe(from, channel, state, method)
+    {:noreply, state}
   end
 
   def handle_cast(:stop, state) do
