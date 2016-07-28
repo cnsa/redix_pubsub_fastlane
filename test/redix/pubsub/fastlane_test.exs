@@ -29,14 +29,18 @@ defmodule Redix.PubSub.FastlaneTest do
         assert :ok = Fastlane.subscribe(ps, "foo", {fl, FastlaneNamespace, [:some_id]})
         assert :ok = Fastlane.subscribe(ps, "bar", {fl, FastlaneNamespace, [:some_second_id]})
 
+        pid = self()
+
         assert match? {:ok, [%{id: "foo",
-                              subscription: %Subscription{channel: "foo",
-                                                          options: [:some_id],
-                                                          parent: FastlaneNamespace}}]}, Server.find(ps, "foo")
+                               from: ^pid,
+                               fastlane: %Subscription{options: [:some_id],
+                                                       parent: FastlaneNamespace,
+                                                       pid: ^fl}}]}, Server.find(ps, "foo")
         assert match? {:ok, [%{id: "bar",
-                              subscription: %Subscription{channel: "bar",
-                                                          options: [:some_second_id],
-                                                          parent: FastlaneNamespace}}]}, Server.find(ps, "bar")
+                               from: ^pid,
+                               fastlane: %Subscription{options: [:some_second_id],
+                                                       parent: FastlaneNamespace,
+                                                       pid: ^fl}}]}, Server.find(ps, "bar")
         assert match? :error, Server.find(ps, "tar")
 
         # Next we unsubscribe
@@ -45,9 +49,10 @@ defmodule Redix.PubSub.FastlaneTest do
 
         assert match? :error, Server.find(ps, "foo")
         assert match? {:ok, [%{id: "bar",
-                              subscription: %Subscription{channel: "bar",
-                                                          options: [:some_second_id],
-                                                          parent: FastlaneNamespace}}]}, Server.find(ps, "bar")
+                               from: ^pid,
+                               fastlane: %Subscription{options: [:some_second_id],
+                                                       parent: FastlaneNamespace,
+                                                       pid: ^fl}}]}, Server.find(ps, "bar")
 
         assert :ok = Fastlane.unsubscribe(ps, "bar")
         assert match? :error, Server.find(ps, "bar")
@@ -58,14 +63,18 @@ defmodule Redix.PubSub.FastlaneTest do
         assert :ok = Fastlane.psubscribe(ps, "foo*", {fl, FastlaneNamespace, [:some_id]})
         assert :ok = Fastlane.psubscribe(ps, "bar*", {fl, FastlaneNamespace, [:some_second_id]})
 
+        pid = self()
+
         assert match? {:ok, [%{id: "foo*",
-                              subscription: %Subscription{channel: "foo*",
-                                                          options: [:some_id],
-                                                          parent: FastlaneNamespace}}]}, Server.find(ps, "foo*")
+                               from: ^pid,
+                               fastlane: %Subscription{options: [:some_id],
+                                                       parent: FastlaneNamespace,
+                                                       pid: ^fl}}]}, Server.find(ps, "foo*")
         assert match? {:ok, [%{id: "bar*",
-                              subscription: %Subscription{channel: "bar*",
-                                                          options: [:some_second_id],
-                                                          parent: FastlaneNamespace}}]}, Server.find(ps, "bar*")
+                               from: ^pid,
+                               fastlane: %Subscription{options: [:some_second_id],
+                                                       parent: FastlaneNamespace,
+                                                       pid: ^fl}}]}, Server.find(ps, "bar*")
         assert match? :error, Server.find(ps, "tar*")
 
         # Next we unsubscribe
@@ -74,9 +83,10 @@ defmodule Redix.PubSub.FastlaneTest do
 
         assert match? :error, Server.find(ps, "foo*")
         assert match? {:ok, [%{id: "bar*",
-                              subscription: %Subscription{channel: "bar*",
-                                                          options: [:some_second_id],
-                                                          parent: FastlaneNamespace}}]}, Server.find(ps, "bar*")
+                               from: ^pid,
+                               fastlane: %Subscription{options: [:some_second_id],
+                                                       parent: FastlaneNamespace,
+                                                       pid: ^fl}}]}, Server.find(ps, "bar*")
 
         assert :ok = Fastlane.punsubscribe(ps, "bar*")
         assert match? :error, Server.find(ps, "bar*")
@@ -90,23 +100,29 @@ defmodule Redix.PubSub.FastlaneTest do
         assert :ok = Fastlane.psubscribe(ps, "boo*", {fl, FastlaneNamespace, [:some_id3]})
         assert :ok = Fastlane.psubscribe(ps, "boo*", {fl, FastlaneNamespace, [:some_id4]})
 
+        pid = self()
+
         assert match? {:ok, [%{id: "foo",
-                              subscription: %Subscription{channel: "foo",
-                                                          options: [:some_id],
-                                                          parent: FastlaneNamespace}},
+                              from: ^pid,
+                              fastlane: %Subscription{options: [:some_id],
+                                                      parent: FastlaneNamespace,
+                                                      pid: ^fl}},
                              %{id: "foo",
-                              subscription: %Subscription{channel: "foo",
-                                                          options: [:some_id2],
-                                                          parent: FastlaneNamespace}}]}, Server.find(ps, "foo")
+                               from: ^pid,
+                               fastlane: %Subscription{options: [:some_id2],
+                                                       parent: FastlaneNamespace,
+                                                       pid: ^fl}}]}, Server.find(ps, "foo")
 
         assert match? {:ok, [%{id: "boo*",
-                              subscription: %Subscription{channel: "boo*",
-                                                          options: [:some_id3],
-                                                          parent: FastlaneNamespace}},
+                               from: ^pid,
+                               fastlane: %Subscription{options: [:some_id3],
+                                                       parent: FastlaneNamespace,
+                                                       pid: ^fl}},
                              %{id: "boo*",
-                              subscription: %Subscription{channel: "boo*",
-                                                          options: [:some_id4],
-                                                          parent: FastlaneNamespace}}]}, Server.find(ps, "boo*")
+                               from: ^pid,
+                               fastlane: %Subscription{options: [:some_id4],
+                                                       parent: FastlaneNamespace,
+                                                       pid: ^fl}}]}, Server.find(ps, "boo*")
       end
 
       it "#unsubscribe :ok on not existing", %{conn: ps} do
