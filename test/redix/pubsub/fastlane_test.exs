@@ -175,15 +175,15 @@ defmodule Redix.PubSub.FastlaneTest do
 
   describe "with custom elements" do
     setup do
-      {:ok, _} = Fastlane.start_link(:some_app_name, [pool_size: 10, fastlane: FastlaneNamespace])
+      {:ok, _} = Fastlane.start_link(:some_custom_name, [pool_size: 10, fastlane: FastlaneNamespace, decoder: &Poison.decode!/1])
       on_exit(fn ->
-        Fastlane.stop(:some_app_name)
+        Fastlane.stop(:some_custom_name)
       end)
-      {:ok, %{conn: :some_app_name}}
+      {:ok, %{conn2: :some_custom_name}}
     end
 
     context "settings" do
-      it "standard test", %{conn: ps, fl: fl} do
+      it "standard test", %{conn2: ps, fl: fl} do
         # First, we subscribe.
         assert :ok = Fastlane.subscribe(ps, "foo", {nil, nil, [:some_id]})
         assert :ok = Fastlane.subscribe(ps, "bar", {fl, FastlaneNamespace, [:some_second_id]})
@@ -192,10 +192,10 @@ defmodule Redix.PubSub.FastlaneTest do
         assert match? {:ok, _}, Server.find(ps, "bar")
 
         # Then, we test messages are routed correctly.
-        publish(ps, "foo", "hello")
-        assert_receive {:fastlane, nil, %{channel: "foo", payload: "hello"}, [:some_id]}
-        publish(ps, "bar", "world")
-        assert_receive {:fastlane, ^fl, %{channel: "bar", payload: "world"}, [:some_second_id]}
+        publish(ps, "foo", {&Poison.encode!/1, %{ some: "hello" }})
+        assert_receive {:fastlane, nil, %{channel: "foo", payload: %{"some" => "hello"}}, [:some_id]}
+        publish(ps, "bar", {&Poison.encode!/1, %{ some: "world" }})
+        assert_receive {:fastlane, ^fl, %{channel: "bar", payload: %{"some" => "world"}}, [:some_second_id]}
       end
     end
   end

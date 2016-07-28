@@ -78,7 +78,8 @@ Or run it by hands:
 Option       | Description                                                            | Default        |
 :----------- | :--------------------------------------------------------------------- | :------------- |
 `:name`      | The required name to register the PubSub processes, ie: `MyApp.PubSub` |                |
-`:fastlane`  | The name of default fastlane module, ie: `My.Fastlane`                 | `nil`          |
+`:fastlane`  | The name of base fastlane module, ie: `My.Fastlane`                    | none           |
+`:decoder`   | The decoder module for payloads, ie: `&Poison.decode!/1`               | none           |
 `:database`  | The redis-server database                                              | `""`           |
 `:host`      | The redis-server host IP                                               | `"127.0.0.1"`  |
 `:port`      | The redis-server port                                                  | `6379`         |

@@ -18,12 +18,14 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
     * `:password` - The redis-server password, defaults `""`
     * `:pool_size` - The size of hte redis connection pool. Defaults `5`
     * `:fastlane` - The default fastlane module. Defaults `nil`
+    * `:decoder` - The decoder for your incoming payloads. Defaults `nil`
   """
 
   @pool_size 5
   @timeout 5_000
   @defaults [host: "127.0.0.1", port: 6379]
   @config_key :redix_pubsub_fastlane
+  @config_keys [:host, :port, :password, :database, :password, :fastlane, :decoder]
 
   @spec start_link(binary|atom, Keyword.t) :: GenServer.on_start
   def start_link(name, opts \\ []) do
@@ -48,8 +50,10 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
     redis_opts = Keyword.take(opts, [:host, :port, :password, :database])
 
     pool_name   = Module.concat(server_name, Pool)
+    decoder     = opts[:decoder] || fn(payload) -> payload end
     server_opts = Keyword.merge(opts, pool_name: pool_name,
                                       server_name: server_name,
+                                      decoder: decoder,
                                       fastlane: opts[:fastlane],
                                       namespace: cleanup_namespace(server_name))
 
@@ -90,8 +94,8 @@ defmodule Redix.PubSub.Fastlane.Supervisor do
 
   defp config(name) do
     case Application.get_env(@config_key, name) do
-      nil ->[]
-      config -> Keyword.take(config, [:host, :port, :password, :database, :password, :fastlane])
+      nil    -> []
+      config -> Keyword.take(config, @config_keys)
     end
   end
 end

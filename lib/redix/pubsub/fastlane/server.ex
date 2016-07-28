@@ -33,6 +33,7 @@ defmodule Redix.PubSub.Fastlane.Server do
               connected: false,
               pool_name: Keyword.fetch!(opts, :pool_name),
               namespace: Keyword.fetch!(opts, :namespace),
+              decoder: Keyword.fetch!(opts, :decoder),
               fastlane: Keyword.fetch!(opts, :fastlane),
               redix_pid: nil}
 
@@ -48,6 +49,10 @@ defmodule Redix.PubSub.Fastlane.Server do
   @doc false
   # Debug method, don't use it in Production.
   def find(pubsub_server, channel), do: GenServer.call(pubsub_server, {:find, channel})
+
+  @doc false
+  # Debug method, don't use it in Production.
+  def list(pubsub_server, channel), do: GenServer.call(pubsub_server, {:list, channel})
 
   @doc false
   def subscribe(pubsub_server, from, channel, fastlane), do: GenServer.call(pubsub_server, {:subscribe, from, channel, fastlane, :subscribe})
@@ -78,6 +83,12 @@ defmodule Redix.PubSub.Fastlane.Server do
 
   def handle_call({:find, channel}, {from, _ref}, %{channels: channels} = state) do
     result = _find(channels, channel, from)
+
+    {:reply, result, state}
+  end
+
+  def handle_call({:list, channel}, _from, %{channels: channels} = state) do
+    result = _list(channels, channel)
 
     {:reply, result, state}
   end
@@ -143,7 +154,9 @@ defmodule Redix.PubSub.Fastlane.Server do
   end
 
   defp _notify_all(subscribers, message, state) do
-     payload = exclude_ns(message, state)
+     payload =
+      exclude_ns(message, state)
+       |> decode_payload(state)
 
      if is_nil(state.fastlane) do
        _notify_all_embed(subscribers, payload)
@@ -260,6 +273,11 @@ defmodule Redix.PubSub.Fastlane.Server do
     end
   end
   defp _exclude_ns(name, _), do: name
+
+  defp decode_payload(%{payload: payload} = message, %{decoder: decoder}) do
+    %{message | payload: decoder.(payload) }
+  end
+  defp decode_payload(message, _), do: message
 
   defp establish_conn(state) do
     redis_opts = Keyword.take(state.opts, @redix_opts)
