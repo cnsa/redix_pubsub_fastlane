@@ -26,6 +26,8 @@
 
 <p>See the <a href="https://hexdocs.pm/redix_pubsub_fastlane/">docs</a> for more information.</p>
 
+<p><strong>Project currently in WIP state.</strong></p>
+
 <p>TL;DR <a href="https://github.com/merqlove/elixir-docker-compose">Example Phoenix app</a></p>
 
 <h2>
@@ -39,7 +41,7 @@
 
 <p>Ie:</p>
 
-<div class="highlight highlight-source-elixir"><pre><span class="pl-c1">Redix</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Fastlane</span>.subscribe(<span class="pl-c1">MyApp</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Redis</span>, <span class="pl-s"><span class="pl-pds">"</span>channel1<span class="pl-pds">"</span></span>, {<span class="pl-c1">My</span>.<span class="pl-c1">Fastlane</span>, [<span class="pl-s"><span class="pl-pds">"</span>some_id<span class="pl-pds">"</span></span>]})</pre></div>
+<div class="highlight highlight-source-elixir"><pre><span class="pl-c1">Redix</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Fastlane</span>.subscribe(<span class="pl-c1">MyApp</span>.<span class="pl-c1">PubSub</span>.<span class="pl-c1">Redis</span>, <span class="pl-s"><span class="pl-pds">"</span>channel1<span class="pl-pds">"</span></span>, {pid, <span class="pl-c1">My</span>.<span class="pl-c1">Fastlane</span>, [<span class="pl-s"><span class="pl-pds">"</span>some_id<span class="pl-pds">"</span></span>]})</pre></div>
 
 <h2>
 <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
