@@ -35,7 +35,7 @@ defmodule RedixPubsubFastlane.Mixfile do
   defp deps do
     [
       {:redix, "~> 0.4.0"},
-      {:redix_pubsub, "~> 0.1", github: "merqlove/redix_pubsub"},
+      {:redix_pubsub, "~> 0.1", github: "whatyouhide/redix_pubsub"},
       {:poolboy, "~> 1.5.1 or ~> 1.6"},
       {:poison, "~> 2.0", only: :test},
       {:ex_doc, "~> 0.11", only: :docs},

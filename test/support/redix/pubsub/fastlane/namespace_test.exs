@@ -14,7 +14,7 @@ defmodule Redix.PubSub.Fastlane.NamespaceTest do
   def fastlane(subscribers, message) do
     subscribers
     |> Enum.each(fn
-      {_from, %{pid: pid, options: options, parent: parent}} ->
+      {_from, %{pid: pid, options: options, parent: _parent}} ->
          __MODULE__.fastlane(pid, message, options)
       _ -> :noop
     end)

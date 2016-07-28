@@ -231,11 +231,7 @@ defmodule Redix.PubSub.Fastlane.Server do
   end
 
   defp unsubscribe_from_channel(channel, %{connected: true, redix_pid: redix_pid} = state, method) do
-    try do
-      apply(Redix.PubSub, method, [redix_pid, include_ns(channel, state), self()])
-    catch
-      :exit, _ -> :ok
-    end
+    apply(Redix.PubSub, method, [redix_pid, include_ns(channel, state), self()])
   end
   defp unsubscribe_from_channel(_, _, _), do: :ok
 
