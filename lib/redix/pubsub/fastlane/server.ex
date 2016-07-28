@@ -5,7 +5,8 @@ defmodule Redix.PubSub.Fastlane.Server do
   require Logger
 
   @redix_opts [:host, :port, :password, :database]
-  @skip_callbacks [:subscribed, :unsubscribed, :psubscribed, :punsubscribed]
+  @unsubscribed_callbacks [:unsubscribed, :punsubscribed]
+  @subscribed_callbacks [:subscribed, :psubscribed]
 
   defmodule Subscription do
     @moduledoc false
@@ -24,7 +25,7 @@ defmodule Redix.PubSub.Fastlane.Server do
   """
   def init(opts) do
     Process.flag(:trap_exit, true)
-    channels = :ets.new(opts[:server_name], [:set, :named_table, {:read_concurrency, true}, {:write_concurrency, true}])
+    channels = :ets.new(opts[:server_name], [:named_table, :duplicate_bag, {:read_concurrency, true}, {:write_concurrency, true}])
 
     state = %{server_name: Keyword.fetch!(opts, :server_name),
               channels: channels,
@@ -45,19 +46,20 @@ defmodule Redix.PubSub.Fastlane.Server do
   def stop(pubsub_server), do: GenServer.cast(pubsub_server, :stop)
 
   @doc false
+  # Debug method, don't use it in Production.
   def find(pubsub_server, channel), do: GenServer.call(pubsub_server, {:find, channel})
 
   @doc false
-  def subscribe(pubsub_server, channel, fastlane), do: GenServer.call(pubsub_server, {:subscribe, channel, fastlane, :subscribe})
+  def subscribe(pubsub_server, from, channel, fastlane), do: GenServer.call(pubsub_server, {:subscribe, from, channel, fastlane, :subscribe})
 
   @doc false
-  def psubscribe(pubsub_server, pattern, fastlane), do: GenServer.call(pubsub_server, {:subscribe, pattern, fastlane, :psubscribe})
+  def psubscribe(pubsub_server, from, pattern, fastlane), do: GenServer.call(pubsub_server, {:subscribe, from, pattern, fastlane, :psubscribe})
 
   @doc false
-  def unsubscribe(pubsub_server, channel), do: GenServer.call(pubsub_server, {:unsubscribe, channel, :unsubscribe})
+  def unsubscribe(pubsub_server, from, channel), do: GenServer.call(pubsub_server, {:unsubscribe, from, channel, :unsubscribe})
 
   @doc false
-  def punsubscribe(pubsub_server, pattern), do: GenServer.call(pubsub_server, {:unsubscribe, pattern, :punsubscribe})
+  def punsubscribe(pubsub_server, from, pattern), do: GenServer.call(pubsub_server, {:unsubscribe, from, pattern, :punsubscribe})
 
   @doc false
   def publish(pubsub_server, channel, message), do: GenServer.call(pubsub_server, {:publish, channel, message})
@@ -74,25 +76,19 @@ defmodule Redix.PubSub.Fastlane.Server do
     {:reply, self(), state}
   end
 
-  def handle_call({:find, channel}, _from, %{channels: channels} = state) do
-    result = _find(channels, channel)
+  def handle_call({:find, channel}, {from, _ref}, %{channels: channels} = state) do
+    result = _find(channels, channel, from)
 
     {:reply, result, state}
   end
 
-  def handle_call({:subscribe, channel, fastlane, method}, _from, %{channels: channels, redix_pid: _} = state) do
-    subscription = case _find(channels, channel) do
-      {:ok, _} -> :ok
-      :error   -> _subscribe(channel, fastlane, state, method)
-    end
-    {:reply, subscription, state}
+  def handle_call({:subscribe, from, channel, fastlane, method}, _from, %{redix_pid: _} = state) do
+    result = _subscribe(from, channel, fastlane, state, method)
+    {:reply, result, state}
   end
 
-  def handle_call({:unsubscribe, channel, method}, _from, %{channels: channels, redix_pid: _} = state) do
-    result = case _find(channels, channel) do
-      {:ok, _} -> _unsubscribe(channel, state, method)
-      :error   -> :ok
-    end
+  def handle_call({:unsubscribe, from, channel, method}, _from, %{redix_pid: _} = state) do
+    result = _unsubscribe(from, channel, state, method)
     {:reply, result, state}
   end
 
@@ -110,7 +106,24 @@ defmodule Redix.PubSub.Fastlane.Server do
     {:noreply, state}
   end
 
-  def handle_info({:redix_pubsub, redix_pid, operation, _}, %{redix_pid: redix_pid} = state) when operation in @skip_callbacks do
+  def handle_info({:redix_pubsub, redix_pid, :disconnected, _}, %{redix_pid: redix_pid} = state) do
+    {:noreply, %{ state | connected: false }}
+  end
+
+  def handle_cast({:punsubscribe, [pattern], _}, state) do
+    IO.inspect pattern
+    {:noreply, %{ state | connected: false }}
+  end
+
+  def handle_info({:redix_pubsub, redix_pid, operation, _}, %{redix_pid: redix_pid} = state) when operation in @subscribed_callbacks do
+    {:noreply, state}
+  end
+
+  def handle_info({:redix_pubsub, redix_pid, operation, status}, %{redix_pid: redix_pid} = state) when operation in @unsubscribed_callbacks do
+    case status do
+      %{pattern: pattern} -> _unsubscribe_all(pattern, state)
+      %{channel: channel} -> _unsubscribe_all(channel, state)
+    end
     {:noreply, state}
   end
 
@@ -128,19 +141,51 @@ defmodule Redix.PubSub.Fastlane.Server do
 
   defp broadcast_message(channels, channel_w_namespace, message, state) do
     channel = _exclude_ns(channel_w_namespace, state.namespace)
-    case _find(channels, channel) do
-      {:ok, %{subscription: subscription}} ->
-        module = subscription.parent || state.fastlane
-        payload = exclude_ns(message, state)
-        module.fastlane(subscription.pid, payload, subscription.options)
-      _ -> nil
+
+    channels
+    |> _list(channel)
+    |> _notify_all(message, state)
+  end
+
+  defp _notify_all(subscribers, message, state) do
+     payload = exclude_ns(message, state)
+
+     subscribers
+     |> Enum.each(fn
+       {_from, %{pid: pid, options: options, parent: parent}} ->
+          _notify(pid, parent, payload, options, state.fastlane)
+       _ -> :noop
+     end)
+  end
+
+  def _notify(pid, parent, payload, options, default_fastlane) do
+    module = parent || default_fastlane
+    module.fastlane(pid, payload, options)
+  end
+
+  defp _find(channels, channel, from) do
+    subscriptions =
+      :ets.lookup(channels, channel)
+      |> Enum.filter(fn
+        {^channel, {^from, _}} -> true
+        _ -> false
+      end)
+      |> Enum.map(fn {_, {_, subscription}} ->
+        %{ id: channel, from: from, subscription: subscription}
+      end)
+
+    case subscriptions do
+      [] -> :error
+      _ -> {:ok, subscriptions}
     end
   end
 
-  defp _find(channels, channel) do
-    case :ets.lookup(channels, channel) do
-      [{^channel, subscription}] -> {:ok, %{ id: channel, subscription: subscription}}
-      [] -> :error
+  defp _list(channels, channel) do
+    try do
+      channels
+      |> :ets.lookup_element(channel, 2)
+    catch
+      :error, :badarg -> []
     end
   end
 
@@ -160,28 +205,46 @@ defmodule Redix.PubSub.Fastlane.Server do
     end
   end
 
-  defp _subscribe(channel, {pid, parent, options}, state, method) when is_atom(parent) and is_list(options)  do
+  defp _subscribe(from, channel, {pid, parent, options}, state, method) when is_atom(parent) and is_list(options)  do
     subscription = %Subscription{pid: pid, parent: parent, options: options, channel: channel}
 
-    case subscribe_to_channel(state, channel, subscription, method) do
+    true = :ets.insert(state.channels, {channel, {from, subscription}})
+
+    case subscribe_to_channel(state, channel, method) do
       :error -> :error
       _      -> :ok
     end
   end
-  defp _subscribe(_, _, _, _), do: :error
+  defp _subscribe(_, _, _, _, _), do: :error
 
-  defp _unsubscribe(channel, %{connected: true, redix_pid: redix_pid, channels: channels} = state, method) do
-    true = :ets.delete(channels, channel)
-    apply(Redix.PubSub, method, [redix_pid, include_ns(channel, state), self()])
+  defp _unsubscribe(from, channel, %{channels: channels} = state, method) do
+    true = :ets.match_delete(channels, {channel, {from, :_}})
+
+    case :ets.select_count(channels, [{{channel, :_}, [], [true]}]) do
+      0 -> unsubscribe_from_channel(channel, state, method)
+      _ -> :noop
+    end
     :ok
   end
-  defp _unsubscribe(_, _, _), do: :error
+  defp _unsubscribe(_, _, _, _), do: :error
 
-  defp subscribe_to_channel(%{connected: true, redix_pid: redix_pid, channels: channels} = state, channel, %Subscription{} = subscription, method) do
-    true = :ets.insert(channels, {channel, subscription})
+  defp _unsubscribe_all(channel, %{channels: channels}) do
+    true = :ets.delete(channels, channel)
+  end
+
+  defp unsubscribe_from_channel(channel, %{connected: true, redix_pid: redix_pid} = state, method) do
+    try do
+      apply(Redix.PubSub, method, [redix_pid, include_ns(channel, state), self()])
+    catch
+      :exit, _ -> :ok
+    end
+  end
+  defp unsubscribe_from_channel(_, _, _), do: :ok
+
+  defp subscribe_to_channel(%{connected: true, redix_pid: redix_pid} = state, channel, method) do
     apply(Redix.PubSub, method, [redix_pid, include_ns(channel, state), self()])
   end
-  defp subscribe_to_channel(_, _, _, _), do: :error
+  defp subscribe_to_channel(_, _, _), do: :error
 
   defp include_ns(name, %{namespace: namespace}) when is_bitstring(namespace) or is_atom(namespace) do
     "#{namespace}.#{name}"
@@ -208,7 +271,9 @@ defmodule Redix.PubSub.Fastlane.Server do
     redis_opts = Keyword.take(state.opts, @redix_opts)
     case Redix.PubSub.start_link(redis_opts) do
       {:ok, redix_pid} -> %{state | redix_pid: redix_pid, connected: true}
-      {:error, _} -> Logger.error("No connection to Redis")
+      {:error, _} ->
+        Logger.error("No connection to Redis")
+        %{state | connected: false}
     end
   end
 end

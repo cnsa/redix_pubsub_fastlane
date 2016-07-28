@@ -49,6 +49,8 @@ defmodule Redix.PubSub.Fastlane do
       #=> {:ok, #<PID:444>}
       {:ok, _pubsub} = Redix.PubSub.Fastlane.start_link(MyApp.PubSub.Redis)
       Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "my_channel", {pid, My.Fastlane, [:some_id]})
+      Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "my_channel", {pid, My.Fastlane, [:some_id2]})
+      Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "my_channel", {pid, My.Fastlane, [:some_id3]})
       #=> :ok
   After a subscription, messages published to a channel are delivered `My.Fastlane.fastlane/3`,
   as it subscribed to that channel via `Redix.PubSub.Fastlane`:
@@ -109,7 +111,7 @@ defmodule Redix.PubSub.Fastlane do
   @spec subscribe(atom, binary, term) :: :ok
   def subscribe(server, channel, fastlane)
     when is_atom(server) and is_binary(channel) and is_tuple(fastlane) do
-    Server.subscribe(server, channel, fastlane)
+    Server.subscribe(server, self(), channel, fastlane)
   end
 
   @doc """
@@ -127,7 +129,7 @@ defmodule Redix.PubSub.Fastlane do
   @spec unsubscribe(atom, binary) :: :ok
   def unsubscribe(server, channel)
     when is_atom(server) and is_binary(channel),
-      do: Server.unsubscribe(server, channel)
+      do: Server.unsubscribe(server, self(), channel)
 
   @doc """
   Subscribes fastlane to the PubSub adapter by pattern.
@@ -143,7 +145,7 @@ defmodule Redix.PubSub.Fastlane do
   @spec psubscribe(atom, String.t, term) :: :ok
   def psubscribe(server, pattern, fastlane)
     when is_atom(server) and is_tuple(fastlane) do
-    Server.psubscribe(server, pattern, fastlane)
+    Server.psubscribe(server, self(), pattern, fastlane)
   end
 
   @doc """
@@ -160,7 +162,7 @@ defmodule Redix.PubSub.Fastlane do
   """
   @spec punsubscribe(atom, String.t) :: :ok
   def punsubscribe(server, pattern) when is_atom(server),
-      do: Server.punsubscribe(server, pattern)
+      do: Server.punsubscribe(server, self(), pattern)
 
   @doc """
   Publish message on given channel.
