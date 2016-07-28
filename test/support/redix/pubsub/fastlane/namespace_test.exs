@@ -11,6 +11,15 @@ defmodule Redix.PubSub.Fastlane.NamespaceTest do
     GenServer.cast(pid, :stop)
   end
 
+  def fastlane(subscribers, message) do
+    subscribers
+    |> Enum.each(fn
+      {_from, %{pid: pid, options: options, parent: parent}} ->
+         __MODULE__.fastlane(pid, message, options)
+      _ -> :noop
+    end)
+  end
+
   def fastlane(pid, payload, options) do
     GenServer.cast({FastlaneTestNamespace, node()}, {:fastlane, pid, payload, options})
     :ok

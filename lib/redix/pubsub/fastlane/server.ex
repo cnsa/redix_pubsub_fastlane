@@ -110,11 +110,6 @@ defmodule Redix.PubSub.Fastlane.Server do
     {:noreply, %{ state | connected: false }}
   end
 
-  def handle_cast({:punsubscribe, [pattern], _}, state) do
-    IO.inspect pattern
-    {:noreply, %{ state | connected: false }}
-  end
-
   def handle_info({:redix_pubsub, redix_pid, operation, _}, %{redix_pid: redix_pid} = state) when operation in @subscribed_callbacks do
     {:noreply, state}
   end
@@ -150,17 +145,20 @@ defmodule Redix.PubSub.Fastlane.Server do
   defp _notify_all(subscribers, message, state) do
      payload = exclude_ns(message, state)
 
+     if is_nil(state.fastlane) do
+       _notify_all_embed(subscribers, payload)
+     else
+       state.fastlane.fastlane(subscribers, payload)
+     end
+  end
+
+  defp _notify_all_embed(subscribers, message) do
      subscribers
      |> Enum.each(fn
        {_from, %{pid: pid, options: options, parent: parent}} ->
-          _notify(pid, parent, payload, options, state.fastlane)
+          parent.fastlane(pid, message, options)
        _ -> :noop
      end)
-  end
-
-  def _notify(pid, parent, payload, options, default_fastlane) do
-    module = parent || default_fastlane
-    module.fastlane(pid, payload, options)
   end
 
   defp _find(channels, channel, from) do
