@@ -132,13 +132,13 @@ defmodule Redix.PubSub.Fastlane.Server do
     {:stop, :normal, state}
   end
 
-  def handle_info({:redix_pubsub, redix_pid, :message, %{channel: channel} = message}, %{channels: channels, redix_pid: redix_pid} = state) do
-    broadcast_message(channels, channel, message, state)
+  def handle_info({:redix_pubsub, redix_pid, :message, %{channel: channel} = message}, %{redix_pid: redix_pid} = state) do
+    broadcast_message(channel, message, state)
     {:noreply, state}
   end
 
-  def handle_info({:redix_pubsub, redix_pid, :pmessage, %{pattern: pattern} = message}, %{channels: channels, redix_pid: redix_pid} = state) do
-    broadcast_message(channels, pattern, message, state)
+  def handle_info({:redix_pubsub, redix_pid, :pmessage, %{pattern: pattern} = message}, %{redix_pid: redix_pid} = state) do
+    broadcast_message(pattern, message, state)
     {:noreply, state}
   end
 
@@ -175,7 +175,7 @@ defmodule Redix.PubSub.Fastlane.Server do
     :ok
   end
 
-  defp broadcast_message(channels, channel_w_namespace, message, state) do
+  defp broadcast_message(channel_w_namespace, message, %{channels: channels} = state) do
     channel = _exclude_ns(channel_w_namespace, state.namespace)
 
     channels
