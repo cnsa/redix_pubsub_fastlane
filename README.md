@@ -90,7 +90,7 @@ Inspired by:
 
 ## License
 
-Copyright (c) 2016 Alexander Merkulov
+Copyright (c) 2016 NSA Ltd. and other contributors
 
 MIT License
 

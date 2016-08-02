@@ -16,7 +16,7 @@ defmodule Redix.PubSub.Fastlane do
       defp deps do
         [{:redix_pubsub_fastlane, "~> 0.1"}]
       end
-  And also add `:phoenix_pubsub_redis` to your list of applications:
+  And also add `:redix_pubsub_fastlane` to your list of applications:
       def application do
         [mod: {MyApp, []},
          applications: [..., :redix_pubsub_fastlane]]
