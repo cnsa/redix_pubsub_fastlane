@@ -17,7 +17,7 @@ defmodule Redix.PubSub.Fastlane.Server do
   Starts the server
   """
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, name: Dict.fetch!(opts, :server_name))
+    GenServer.start_link(__MODULE__, opts, name: Keyword.fetch!(opts, :server_name))
   end
 
   @doc """

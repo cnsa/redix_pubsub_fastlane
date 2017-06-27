@@ -11,25 +11,25 @@ defmodule RedixPubsubFastlane.Mixfile do
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps,
+     deps: deps(),
      aliases: [publish: ["hex.publish", "hex.docs", &git_tag/1], tag: [&git_tag/1]],
      source_url: @project_url,
      homepage_url: @project_url,
      description: "Fastlane pattern based on Redix.PubSub interface for Elixir",
-     package: package,
+     package: package(),
      test_coverage: [tool: ExCoveralls],
      preferred_cli_env: cli_env_for(:test, [
        "coveralls", "coveralls.detail", "coveralls.html", "coveralls.post",
      ]),
-     docs: docs]
+     docs: docs()]
   end
 
   def application do
     [applications: [:logger, :poolboy, :redix, :redix_pubsub]]
   end
 
-  defp elixirc_paths(:test), do: elixirc_paths ++ ["test/support"]
-  defp elixirc_paths(_),     do: elixirc_paths
+  defp elixirc_paths(:test), do: elixirc_paths() ++ ["test/support"]
+  defp elixirc_paths(_),     do: elixirc_paths()
   defp elixirc_paths,        do: ["lib"]
 
   defp deps do

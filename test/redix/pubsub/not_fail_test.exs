@@ -3,8 +3,6 @@ defmodule Redix.PubSub.NotFailTest do
 
   alias Redix.PubSub
 
-  @publish_timeout 30
-
   setup do
     {:ok, conn} = PubSub.start_link([], [name: :redix_pubsub])
     on_exit(fn ->
