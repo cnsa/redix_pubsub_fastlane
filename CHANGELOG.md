@@ -3,10 +3,12 @@
 ## v0.3.0
 
 - Bump Elixir dependency to ~> 1.3.
+- Fix Elixir ~> 1.4 deprecations.
 
 ## v0.2.0
 
-- Bump the Redix dependency to ~> v0.4.
+- Bump the Redix dependency to ~> v0.6.
+- Bump the RedixPubSub dependency to ~> v0.4.
 
 ## v0.1.9
 
