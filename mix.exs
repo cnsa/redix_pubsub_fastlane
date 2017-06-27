@@ -38,7 +38,7 @@ defmodule RedixPubsubFastlane.Mixfile do
       {:redix_pubsub, "~> 0.4.0"},
       {:poolboy, "~> 1.5.1 or ~> 1.6"},
       {:poison, "~> 2.0", only: :test},
-      {:ex_doc, "~> 0.11", only: :docs},
+      {:ex_doc, "~> 0.11", only: :dev, runtime: false},
       {:earmark, ">= 0.0.0", only: :docs},
       {:ex_spec, "~> 2.0.0", only: :test},
       {:excoveralls, "~> 0.5", only: :test},
