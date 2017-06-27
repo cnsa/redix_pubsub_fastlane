@@ -17,3 +17,7 @@ erl_crash.dump
 *.ez
 
 .DS_Store
+
+.idea
+*.iml
+.tool-versions

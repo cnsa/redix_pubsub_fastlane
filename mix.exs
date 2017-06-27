@@ -2,7 +2,7 @@ defmodule RedixPubsubFastlane.Mixfile do
   use Mix.Project
 
   @project_url "https://github.com/cnsa/redix_pubsub_fastlane"
-  @version "0.1.9"
+  @version "0.2.0"
 
   def project do
     [app: :redix_pubsub_fastlane,
@@ -34,8 +34,8 @@ defmodule RedixPubsubFastlane.Mixfile do
 
   defp deps do
     [
-      {:redix, "~> 0.4.0"},
-      {:redix_pubsub, "~> 0.1.1"},
+      {:redix, "~> 0.4"},
+      {:redix_pubsub, "~> 0.2"},
       {:poolboy, "~> 1.5.1 or ~> 1.6"},
       {:poison, "~> 2.0", only: :test},
       {:ex_doc, "~> 0.11", only: :docs},
@@ -49,7 +49,9 @@ defmodule RedixPubsubFastlane.Mixfile do
     Enum.reduce(tasks, [], fn(key, acc) -> Keyword.put(acc, :"#{key}", env) end)
   end
 
-  defp ex_12_13(v12, v13), do: if ex_13, do: v13, else: v12
+  defp ex_12_13(v12, v13) do
+    if ex_13, do: v13, else: v12
+  end
 
   defp ex_13, do: Version.match?(System.version, ">= 1.3.0")
 
