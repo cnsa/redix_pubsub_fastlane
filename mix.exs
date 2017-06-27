@@ -34,8 +34,8 @@ defmodule RedixPubsubFastlane.Mixfile do
 
   defp deps do
     [
-      {:redix, "~> 0.4"},
-      {:redix_pubsub, "~> 0.2"},
+      {:redix, "~> 0.6.0"},
+      {:redix_pubsub, "~> 0.4.0"},
       {:poolboy, "~> 1.5.1 or ~> 1.6"},
       {:poison, "~> 2.0", only: :test},
       {:ex_doc, "~> 0.11", only: :docs},

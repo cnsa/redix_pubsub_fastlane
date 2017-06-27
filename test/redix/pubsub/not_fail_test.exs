@@ -6,9 +6,11 @@ defmodule Redix.PubSub.NotFailTest do
   @publish_timeout 30
 
   setup do
-    {:ok, conn} = PubSub.start_link()
+    {:ok, conn} = PubSub.start_link([], [name: :redix_pubsub])
     on_exit(fn ->
-      PubSub.stop(conn)
+      if Process.whereis(:redix_pubsub) do
+        PubSub.stop(conn)
+      end
     end)
     {:ok, %{conn: conn}}
   end
