@@ -33,8 +33,7 @@ Redix.PubSub.Fastlane.subscribe(MyApp.PubSub.Redis, "channel1", {pid, My.Fastlan
 
   ```elixir
   def deps do
-    [{:redix_pubsub_fastlane, "~> 0.3.1"},
-     {:redix_pubsub, "~> 0.3.1", github: "whatyouhide/redix_pubsub"}]
+    [{:redix_pubsub_fastlane, "~> 0.3.1"}]
   end
   ```
 
