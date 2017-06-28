@@ -25,7 +25,7 @@ defmodule RedixPubsubFastlane.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :poolboy, :redix, :redix_pubsub]]
+    [applications: [:logger, :poolboy, :redix_pubsub]]
   end
 
   defp elixirc_paths(:test), do: elixirc_paths() ++ ["test/support"]
@@ -34,7 +34,6 @@ defmodule RedixPubsubFastlane.Mixfile do
 
   defp deps do
     [
-      {:redix, "~> 0.6.0"},
       {:redix_pubsub, "~> 0.4.0"},
       {:poolboy, "~> 1.5.1 or ~> 1.6"},
       {:poison, "~> 2.0", only: :test},
