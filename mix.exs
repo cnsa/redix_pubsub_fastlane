@@ -2,7 +2,7 @@ defmodule RedixPubsubFastlane.Mixfile do
   use Mix.Project
 
   @project_url "https://github.com/cnsa/redix_pubsub_fastlane"
-  @version "0.3.0"
+  @version "0.3.1"
 
   def project do
     [app: :redix_pubsub_fastlane,

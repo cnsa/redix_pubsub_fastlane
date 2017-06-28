@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.1
+
+- Drop the Redix from dependencies.
+
 ## v0.3.0
 
 - Bump Elixir dependency to ~> 1.3.
