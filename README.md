@@ -17,7 +17,7 @@ Works as a simple wrapper over [Redix.PubSub](https://hexdocs.pm/redix_pubsub/).
 
 Main goal is providing a fastlane path for published events.
 
-Imagine: You have a `Main` task, that depends on few subtasks, each with its own UUID & in they await for published event, but also must know  the `Main` task ID within every event.
+Imagine: You have a `Main` task, that depends on few subtasks, each with its own UUID & await for published event, but also wants the `Main` task ID within every event.
 
 Ie:
 
