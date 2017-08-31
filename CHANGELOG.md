@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.3
+
+- Add support for Elixir 1.5
+
 ## v0.3.1
 
 - Drop the Redix from dependencies.
