@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.4
+
+- Auto push git tags. Fix docs publisher.
+
 ## v0.3.3
 
 - Add support for Elixir 1.5
